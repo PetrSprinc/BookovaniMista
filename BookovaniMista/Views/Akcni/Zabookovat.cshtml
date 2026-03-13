@@ -1,0 +1,215 @@
+﻿@{
+    ViewData["Title"] = "Zabookovat místo";
+}
+<h1>@ViewData["Title"]</h1>
+
+<p class="lead">Možnost zabookvat jedno místo pro zvolený den. Klikněte na sekci mapy pro detail.</p>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <p>Klikněte na sekci mapy pro zobrazení detailu (bez JavaScriptu).</p>
+
+        <div class="ratio ratio-16x9">
+            <svg viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+                <!-- Horní řada: 4 sekce-->
+                <a href="#section-1"><rect x="20"  y="20"  width="220" height="200" class="section" data-id="1" /></a>
+                <a href="#section-2"><rect x="260" y="20"  width="220" height="200" class="section" data-id="2" /></a>
+                <a href="#section-3"><rect x="500" y="20"  width="220" height="200" class="section" data-id="3" /></a>
+                <a href="#section-4"><rect x="740" y="20"  width="220" height="200" class="section" data-id="4" /></a>
+
+                <!-- Dolní řada: 5 sekcí -->
+                <a href="#section-5"><rect x="20"  y="260" width="150" height="200" class="section" data-id="5" /></a>
+                <a href="#section-6"><rect x="190" y="260" width="150" height="200" class="section" data-id="6" /></a>
+                <a href="#section-7"><rect x="360" y="260" width="150" height="200" class="section" data-id="7" /></a>
+                <a href="#section-8"><rect x="530" y="260" width="150" height="200" class="section" data-id="8" /></a>
+                <a href="#section-9"><rect x="700" y="260" width="150" height="200" class="section" data-id="9" /></a>
+
+                <!-- Štítky-->
+                <a href="#section-1"><text x="130" y="120" text-anchor="middle" class="label">1</text></a>
+                <a href="#section-2"><text x="370" y="120" text-anchor="middle" class="label">2</text></a>
+                <a href="#section-3"><text x="610" y="120" text-anchor="middle" class="label">3</text></a>
+                <a href="#section-4"><text x="850" y="120" text-anchor="middle" class="label">4</text></a>
+
+                <a href="#section-5"><text x="95"  y="360" text-anchor="middle" class="label">5</text></a>
+                <a href="#section-6"><text x="265" y="360" text-anchor="middle" class="label">6</text></a>
+                <a href="#section-7"><text x="435" y="360" text-anchor="middle" class="label">7</text></a>
+                <a href="#section-8"><text x="605" y="360" text-anchor="middle" class="label">8</text></a>
+                <a href="#section-9"><text x="775" y="360" text-anchor="middle" class="label">9</text></a>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- Detailní panely pro každou sekci-->
+<div id="section-1" class="overlay" aria-hidden="true">
+    <div class="detail">
+        <a class="close" href="#" aria-label="Zavřít">&times;</a>
+        <h3>Sekce 1</h3>
+        <p class="muted">Severní levá sekce — vizualizace míst (3×4)</p>
+        <div class="seats-grid">
+            @for (int r = 1; r <= 4; r++)
+            {
+                for (int c = 1; c <= 3; c++)
+                {
+                    <button type="button" class="btn btn-outline-primary seat">R@rC@c</button>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<div id="section-2" class="overlay" aria-hidden="true">
+    <div class="detail">
+        <a class="close" href="#" aria-label="Zavřít">&times;</a>
+        <h3>Sekce 2</h3>
+        <p class="muted">Severní střed-levo — vizualizace míst (3×4)</p>
+        <div class="seats-grid">
+            @for (int r = 1; r <= 4; r++)
+            {
+                for (int c = 1; c <= 3; c++)
+                {
+                    <button type="button" class="btn btn-outline-primary seat">R@rC@c</button>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<div id="section-3" class="overlay" aria-hidden="true">
+    <div class="detail">
+        <a class="close" href="#" aria-label="Zavřít">&times;</a>
+        <h3>Sekce 3</h3>
+        <p class="muted">Severní střed-pravo — vizualizace míst (3×4)</p>
+        <div class="seats-grid">
+            @for (int r = 1; r <= 4; r++)
+            {
+                for (int c = 1; c <= 3; c++)
+                {
+                    <button type="button" class="btn btn-outline-primary seat">R@rC@c</button>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<div id="section-4" class="overlay" aria-hidden="true">
+    <div class="detail">
+        <a class="close" href="#" aria-label="Zavřít">&times;</a>
+        <h3>Sekce 4</h3>
+        <p class="muted">Severní pravá sekce — vizualizace míst (3×4)</p>
+        <div class="seats-grid">
+            @for (int r = 1; r <= 4; r++)
+            {
+                for (int c = 1; c <= 3; c++)
+                {
+                    <button type="button" class="btn btn-outline-primary seat">R@rC@c</button>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<div id="section-5" class="overlay" aria-hidden="true">
+    <div class="detail">
+        <a class="close" href="#" aria-label="Zavřít">&times;</a>
+        <h3>Sekce 5</h3>
+        <p class="muted">Jižní 1/5 — vizualizace míst (3×4)</p>
+        <div class="seats-grid">
+            @for (int r = 1; r <= 4; r++)
+            {
+                for (int c = 1; c <= 3; c++)
+                {
+                    <button type="button" class="btn btn-outline-primary seat">R@rC@c</button>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<div id="section-6" class="overlay" aria-hidden="true">
+    <div class="detail">
+        <a class="close" href="#" aria-label="Zavřít">&times;</a>
+        <h3>Sekce 6</h3>
+        <p class="muted">Jižní 2/5 — vizualizace míst (3×4)</p>
+        <div class="seats-grid">
+            @for (int r = 1; r <= 4; r++)
+            {
+                for (int c = 1; c <= 3; c++)
+                {
+                    <button type="button" class="btn btn-outline-primary seat">R@rC@c</button>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<div id="section-7" class="overlay" aria-hidden="true">
+    <div class="detail">
+        <a class="close" href="#" aria-label="Zavřít">&times;</a>
+        <h3>Sekce 7</h3>
+        <p class="muted">Jižní 3/5 — vizualizace míst (3×4)</p>
+        <div class="seats-grid">
+            @for (int r = 1; r <= 4; r++)
+            {
+                for (int c = 1; c <= 3; c++)
+                {
+                    <button type="button" class="btn btn-outline-primary seat">R@rC@c</button>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<div id="section-8" class="overlay" aria-hidden="true">
+    <div class="detail">
+        <a class="close" href="#" aria-label="Zavřít">&times;</a>
+        <h3>Sekce 8</h3>
+        <p class="muted">Jižní 4/5 — vizualizace míst (3×4)</p>
+        <div class="seats-grid">
+            @for (int r = 1; r <= 4; r++)
+            {
+                for (int c = 1; c <= 3; c++)
+                {
+                    <button type="button" class="btn btn-outline-primary seat">R@rC@c</button>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<div id="section-9" class="overlay" aria-hidden="true">
+    <div class="detail">
+        <a class="close" href="#" aria-label="Zavřít">&times;</a>
+        <h3>Sekce 9</h3>
+        <p class="muted">Jižní 5/5 — vizualizace míst (3×4)</p>
+        <div class="seats-grid">
+            @for (int r = 1; r <= 4; r++)
+            {
+                for (int c = 1; c <= 3; c++)
+                {
+                    <button type="button" class="btn btn-outline-primary seat">R@rC@c</button>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        /* SVG sekce */
+        .section { fill:#0d6efd22; stroke:#0d6efd; stroke-width:2; cursor:pointer; transition:fill .12s, transform .08s; }
+        a .section:hover { fill:#0d6efd55; transform: scale(1.01); }
+        .label { fill:#0d6efd; font-weight:700; font-size:24px; pointer-events:none; }
+
+        /* Overlay detailu (CSS-only: :target) */
+        .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1050; padding:1rem; }
+        .overlay:target { display:flex; }
+        .detail { background:#fff; padding:1.25rem; border-radius:.5rem; max-width:760px; width:100%; box-shadow:0 8px 24px rgba(0,0,0,.2); position:relative; }
+        .detail .close { position:absolute; right:.5rem; top:.25rem; font-size:2rem; color:#666; text-decoration:none; line-height:1; }
+        .detail .muted { color:#6c757d; margin-top:-.25rem; margin-bottom:.75rem; }
+
+        /* Grid míst 3x4 */
+        .seats-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:.5rem; margin-top:.75rem; }
+        .seat { min-height:48px; display:flex; align-items:center; justify-content:center; font-weight:600; }
+    </style>
+}

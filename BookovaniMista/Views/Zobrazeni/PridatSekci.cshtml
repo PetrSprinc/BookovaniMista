@@ -1,0 +1,17 @@
+﻿@{
+    ViewData["Title"] = "Přidat sekci";
+}
+@model BookovaniMista.Models.Sekce
+
+<h1>@ViewData["Title"]</h1>
+
+<p class="lead">Zobrazuje se posledním 100 mích rezervací.</p>
+
+<form asp-action="PridatSekciDB" asp-asp-controller="Zobrazeni">
+    <label>Nazev</label>
+    <input type="text" class="form-control" asp-for="Nazev" />
+    <label>Kapacita</label>
+    <input type="number" class="form-control" asp-for="Kapacita" />
+
+    <button type="submit" class="btn btn-primary mt-3">Přidat sekci</button>
+</form>

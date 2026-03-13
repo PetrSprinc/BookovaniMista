@@ -3,6 +3,32 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">Vítej člověče!</h1>
+    <div class="d-grid gap-2 col-6 mx-auto">
+        <a asp-controller="Akcni" asp-action="Zabookovat" class="btn btn-primary">Zabookovat místo</a>
+        <a asp-controller="Zobrazeni" asp-action="Historie" class="btn btn-primary">Moje historie</a>
+        <a asp-controller="Zobrazeni" asp-action="Obsazenost" class="btn btn-primary">Obsazenost místnosti</a>
+        <a asp-controller="Zobrazeni" asp-action="Vytizenost" class="btn btn-primary">Vytíženost míst</a>
+    </div>
+</div>
+
+
+@model List<BookovaniMista.Models.Sekce>
+<div class="mt-5">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Název sekce</th>
+                <th>Kapacita</th>
+            </tr>
+        </thead>
+        <tbody>
+@*             @foreach (var sekce in Model)
+            {
+                <tr>
+                    <td>@sekce.Nazev</td>
+                    <td>@sekce.Kapacita</td>
+                </tr>
+            } *@
+    </table>
 </div>

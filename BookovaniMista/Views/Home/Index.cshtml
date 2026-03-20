@@ -1,4 +1,6 @@
-﻿@{
+﻿@model List<Entities.BookovaniMista.Models.Sekce>
+
+@{
     ViewData["Title"] = "Home Page";
 }
 
@@ -12,8 +14,6 @@
     </div>
 </div>
 
-
-@model List<BookovaniMista.Models.Sekce>
 <div class="mt-5">
     <table class="table">
         <thead>
@@ -23,12 +23,13 @@
             </tr>
         </thead>
         <tbody>
-@*             @foreach (var sekce in Model)
+            @foreach (var sekce in Model)
             {
                 <tr>
                     <td>@sekce.Nazev</td>
                     <td>@sekce.Kapacita</td>
                 </tr>
-            } *@
+            }
+        </tbody>
     </table>
 </div>

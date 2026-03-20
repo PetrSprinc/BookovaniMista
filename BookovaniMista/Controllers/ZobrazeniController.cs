@@ -1,5 +1,5 @@
-using BookovaniMista.Data;
-using BookovaniMista.Models;
+using Entities.BookovaniMista;
+using Entities.BookovaniMista.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -33,13 +33,6 @@ namespace BookovaniMista.Controllers
         public IActionResult PridatSekci()
         {
             return View();
-        }
-        public IActionResult PridatSekciDB(Sekce model)
-        {
-            _context.Sekce.Add(model);
-            _context.SaveChanges();
-
-            return RedirectToAction("Index", "Home");
         }
     }
 }

@@ -1,12 +1,15 @@
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.EntityFrameworkCore;
+using Entities.BookovaniMista;
+using Microsoft.Extensions.DependencyInjection;
+using BookovaniMista.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddDbContext<BookovaniMista.Data.BookovaniMistaDbContext>(options =>
+builder.Services.AddDbContext<BookovaniMistaDbContext>(options =>
     options.UseInMemoryDatabase("BookovaniMistaDb")); //UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))); // UseInMemoryDatabase for testing purposes
 
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
@@ -42,5 +45,11 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+// Spuštìní seedování v rámci scope pøed spuštìním aplikace
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<BookovaniMistaDbContext>();
+    SeedData.Initialize(db);
+}
 
 app.Run();

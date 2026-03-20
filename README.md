@@ -45,6 +45,7 @@ vypsat pouze místa s alespoň jednou rezervací
 # DB model
 slovo "sekce" není ideální, je pomnožný
 https://dbdiagram.io/d
+```
 Table zamestnanci {
   id integer [primary key]
   jmeno varchar
@@ -68,3 +69,4 @@ Table rezervace {
 Ref: "zamestnanci"."id" < "rezervace"."zamestnanec_id"
 Ref: "misto"."id" < "rezervace"."misto_id"
 Ref: "sekce"."id" < "misto"."sekce_id"
+```

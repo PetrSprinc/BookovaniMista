@@ -53,12 +53,15 @@ Table zamestnanci {
 }
 Table sekce {
   id integer [primary key]
+  oznaceni varchar
   nazev varchar
+  kapacita integer
 }
 Table misto {
   id integer [primary key]
   sekce_id integer
   oznaceni varchar
+  nazev varchar
 }
 Table rezervace {
   id integer [primary key]

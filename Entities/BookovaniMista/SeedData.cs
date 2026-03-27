@@ -13,8 +13,8 @@ namespace BookovaniMista.Infrastructure
                 {
                     new Sekce { Oznaceni = "SJ1", Nazev = "Sekce jih 1", Kapacita = 15 },
                     new Sekce { Oznaceni = "SJ2", Nazev = "Sekce jih 2", Kapacita = 18 }, //asi
-                    new Sekce { Oznaceni = "SJ3", Nazev = "Sekce jih 3", Kapacita = 18 }, //asi
-                    new Sekce { Oznaceni = "SJ4", Nazev = "Sekce jih 4", Kapacita = 6  }, //asi
+                    new Sekce { Oznaceni = "SJ3", Nazev = "Sekce jih 3", Kapacita = 18 },
+                    new Sekce { Oznaceni = "SJ4", Nazev = "Sekce jih 4", Kapacita = 6  },
                     new Sekce { Oznaceni = "SS1", Nazev = "Sekce sever 1", Kapacita = 12 },
                     new Sekce { Oznaceni = "SS2", Nazev = "Sekce sever 2", Kapacita = 12 },
                     new Sekce { Oznaceni = "SS3", Nazev = "Sekce sever 3", Kapacita = 12 },
@@ -79,6 +79,8 @@ namespace BookovaniMista.Infrastructure
                     new Rezervace {  Misto = mistaList[22] , Zamestnanec = zamestnanciList[2] , DatumRezervace = DateTime.Now },
                     new Rezervace {  Misto = mistaList[33] , Zamestnanec = zamestnanciList[3] , DatumRezervace = DateTime.Now.AddDays(1) },
                     new Rezervace {  Misto = mistaList[44] , Zamestnanec = zamestnanciList[3] , DatumRezervace = DateTime.Now.AddDays(1) },
+                    new Rezervace {  Misto = mistaList[44] , Zamestnanec = zamestnanciList[0] , DatumRezervace = DateTime.Now.AddDays(2) },
+                    new Rezervace {  Misto = mistaList[44] , Zamestnanec = zamestnanciList[0] , DatumRezervace = DateTime.Now.AddDays(3) },
                 };
 
                 db.Rezervace.AddRange(defaultRezervace);

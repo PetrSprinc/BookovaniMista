@@ -1,6 +1,49 @@
-﻿@{
+﻿@model BookovaniMista.ViewModels.VytizenostViewModel
+
+@{
     ViewData["Title"] = "Vytíženost míst";
 }
 <h1>@ViewData["Title"]</h1>
 
 <p class="lead">Zobrazuje se aktuální vytíženost všech míst.</p>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-auto">
+        <label for="odDatum" class="form-label">Od</label>
+        <input type="date" id="odDatum" name="odDatum" class="form-control" value="@(Model.Od.ToString("yyyy-MM-dd"))" />
+    </div>
+    <div class="col-auto">
+        <label for="doDatum" class="form-label">Do</label>
+        <input type="date" id="doDatum" name="doDatum" class="form-control" value="@(Model.Do.ToString("yyyy-MM-dd"))" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Filtr</button>
+    </div>
+</form>
+
+@if (Model.Rows == null || !Model.Rows.Any())
+{
+    <div class="alert alert-info">Člověče, nezlob se! V daném období nebyla nalezena žádná rezervace.</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Sekce</th>
+                <th>Místo</th>
+                <th class="text-end">Počet bookovaných dnů</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model.Rows)
+            {
+                <tr>
+                    <td>@r.SekceNazev</td>
+                    <td>@r.MistoOznaceni</td>
+                    <td class="text-end">@r.BookedDays</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -1,6 +1,42 @@
-﻿@{
+﻿@model List<Entities.BookovaniMista.Models.Rezervace>
+
+@{
     ViewData["Title"] = "Moje historie";
 }
 <h1>@ViewData["Title"]</h1>
 
 <p class="lead">Zobrazuje se posledních 100 mých rezervací.</p>
+
+@if (ViewData["ErrorMessage"] != null)
+{
+    <div class="alert alert-warning">@ViewData["ErrorMessage"]</div>
+}
+
+@if (Model == null || !Model.Any())
+{
+    <div class="text-muted">Žádné rezervace k zobrazení.</div>
+}
+else
+{
+    <table class="table table-sm table-striped mt-3">
+        <thead>
+            <tr>
+                <th>Datum</th>
+                <th>Sekce</th>
+                <th>Místo</th>
+                <th>Místo (označení)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td>@r.DatumRezervace.ToString("yyyy-MM-dd")</td>
+                    <td>@(r.Misto?.Sekce != null ? (string.IsNullOrEmpty(r.Misto.Sekce.Nazev) ? r.Misto.Sekce.Oznaceni : r.Misto.Sekce.Nazev) : "-")</td>
+                    <td>@(r.Misto?.Nazev ?? "-")</td>
+                    <td>@(r.Misto?.Oznaceni ?? "-")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

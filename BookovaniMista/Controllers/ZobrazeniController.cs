@@ -7,6 +7,7 @@ using BookovaniMista.ViewModels;
 using System;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace BookovaniMista.Controllers
 {
@@ -22,9 +23,26 @@ namespace BookovaniMista.Controllers
         }
 
         // Historie: zobrazí pouze rezervace vytvoøené pøihlášeným uživatelem (max 100 posledních)
-        public IActionResult Historie()
+        public async Task<IActionResult> Historie()
         {
-            return View();
+            // Najít aktuálního zamìstnance podle claimu (email / upn / User.Identity.Name)
+            var zam = await GetCurrentZamestnanecAsync();
+            if (zam == null)
+            {
+                ViewData["ErrorMessage"] = "Nepodaøilo se identifikovat uživatele v DB (zkontrolujte email).";
+                return View(new List<Rezervace>());
+            }
+
+            // Naèíst posledních 100 rezervací tohoto zamìstnance (s místem a sekcí)
+            var rezervace = await _context.Rezervace
+                .Where(r => r.ZamestnanecId == zam.Id)
+                .Include(r => r.Misto)
+                    .ThenInclude(m => m.Sekce)
+                .OrderByDescending(r => r.DatumRezervace)
+                .Take(100)
+                .ToListAsync();
+
+            return View(rezervace);
         }
 
         public IActionResult Obsazenost()
@@ -71,6 +89,36 @@ namespace BookovaniMista.Controllers
             };
 
             return View(vm);
+        }
+
+        // Helper: zjistí aktuálního Zamestnanec podle claimù (email/upn/Identity.Name)
+        private async Task<Zamestnanec?> GetCurrentZamestnanecAsync()
+        {
+            // 1) email
+            var email = User.FindFirst(ClaimTypes.Email)?.Value
+                        ?? User.FindFirst("email")?.Value
+                        ?? User.FindFirst("upn")?.Value;
+
+            if (!string.IsNullOrEmpty(email))
+            {
+                var byEmail = await _context.Zamestnanci
+                    .FirstOrDefaultAsync(z => z.Email != null && z.Email.ToLower() == email.ToLower());
+                if (byEmail != null) return byEmail;
+            }
+
+            // 2) fallback na User.Identity.Name (napø. DOMAIN\user)
+            var nameClaim = User.Identity?.Name;
+            if (!string.IsNullOrEmpty(nameClaim))
+            {
+                var shortName = nameClaim.Contains("\\") ? nameClaim.Split('\\').Last() : nameClaim;
+                // Zkusíme najít podle jména (èásteèné porovnání)
+                var byName = await _context.Zamestnanci
+                    .FirstOrDefaultAsync(z => z.Jmeno != null && z.Jmeno.Contains(shortName, StringComparison.OrdinalIgnoreCase));
+                if (byName != null) return byName;
+            }
+
+            // nenalezeno
+            return null;
         }
     }
 }

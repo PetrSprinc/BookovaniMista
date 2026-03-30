@@ -404,21 +404,21 @@
                 btn.classList.add('booked');
                 btn.disabled = true;
 
-                // Pokus o odeslání na backend. Upravte URL na skutečný endpoint.
+                // Sestavit payload pro server
                 const payload = {
                     sekceId: sekceDb || null,
                     seatNumber: seatNumber,
                     date: selectedDate || null
                 };
 
-                // Zkusit získat anti-forgery token pokud je přítomen na stránce
+                // TODO Zkusit získat anti-forgery token pokud je přítomen na stránce
                 const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
                 const headers = { 'Content-Type': 'application/json' };
                 if (tokenInput) {
                     headers['RequestVerificationToken'] = tokenInput.value;
                 }
 
-                // TODO: změňte URL '/Akcni/Rezervovat' na reálný serverový endpoint, který uloží rezervaci do DB.
+                // Odeslat POST požadavek na server
                 fetch('/Akcni/Rezervovat', {
                     method: 'POST',
                     headers: headers,

@@ -57,8 +57,8 @@ namespace BookovaniMista.Infrastructure
             {
                 var defaultZamestnanec = new[]
                 {
-                    new Zamestnanec { Jmeno = "SEYFOR\\petr.sprinc", Email = "Petr.Sprinc@seyfor.com" },
                     new Zamestnanec { Jmeno = "Jan Novák", Email = "jan.novak92@testmail.cz" },
+                    new Zamestnanec { Jmeno = "SEYFOR\\petr.sprinc", Email = "Petr.Sprinc@seyfor.com" },
                     new Zamestnanec { Jmeno = "Petra Svobodová", Email = "petra.svobodova87@testmail.cz" },
                     new Zamestnanec { Jmeno = "Martin Dvoøák", Email = "martin.dvorak91@testmail.cz" },
                     new Zamestnanec { Jmeno = "Lucie Procházková", Email = "lucie.prochazkova95@testmail.cz" },

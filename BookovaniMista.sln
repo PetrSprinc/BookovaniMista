@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BookovaniMista", "Bookovani
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Entities", "Entities\Entities.csproj", "{5D43DF0A-25B6-4F56-BAA6-D879B6E26893}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Business", "Business\Business.csproj", "{46589C12-034D-4445-8FBE-3ED93E3658F1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{5D43DF0A-25B6-4F56-BAA6-D879B6E26893}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D43DF0A-25B6-4F56-BAA6-D879B6E26893}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D43DF0A-25B6-4F56-BAA6-D879B6E26893}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46589C12-034D-4445-8FBE-3ED93E3658F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46589C12-034D-4445-8FBE-3ED93E3658F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46589C12-034D-4445-8FBE-3ED93E3658F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46589C12-034D-4445-8FBE-3ED93E3658F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

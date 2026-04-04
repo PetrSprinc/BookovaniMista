@@ -1,17 +1,19 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Entities.BookovaniMista.Models;
+using Entities.BookovaniMista;
 
 namespace Business.BookovaniMista
 {
-    public static class RezervaceBusiness
+    public class RezervaceBusiness : IRezervaceBusiness
     {
-        public static Task<bool> IsMistoBookedAsync(this IQueryable<Rezervace> rezervace, int mistoId, DateTime date)
+        private readonly BookovaniMistaDbContext _db;
+
+        public RezervaceBusiness(BookovaniMistaDbContext db) => _db = db;
+
+        public Task<bool> IsMistoBookedAsync(int mistoId, DateTime date)
         {
             var d = date.Date;
-            return rezervace.AnyAsync(r => r.MistoId == mistoId && r.DatumRezervace >= d && r.DatumRezervace < d.AddDays(1));
+            return _db.Rezervace
+                .AnyAsync(r => r.MistoId == mistoId && r.DatumRezervace >= d && r.DatumRezervace < d.AddDays(1));
         }
     }
 }

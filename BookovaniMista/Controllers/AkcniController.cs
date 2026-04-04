@@ -8,28 +8,22 @@ using Business.BookovaniMista;
 namespace BookovaniMista.Controllers
 {
     [Route("Akcni")]
-    public class AkcniController : Controller
+    public partial class AkcniController : Controller
     {
         private readonly ILogger<AkcniController> _logger;
         private readonly BookovaniMistaDbContext _db;
+        private readonly IRezervaceBusiness _rezervaceBusiness;
 
-        public AkcniController(ILogger<AkcniController> logger, BookovaniMistaDbContext db)
+        public AkcniController(ILogger<AkcniController> logger, BookovaniMistaDbContext db, IRezervaceBusiness rezervaceBusiness)
         {
             _logger = logger;
             _db = db;
+            _rezervaceBusiness = rezervaceBusiness;
         }
 
         public IActionResult Zabookovat()
         {
             return View();
-        }
-
-        // DTO odpovídá payloadu z klienta
-        public class RezervaceDto
-        {
-            public int? sekceId { get; set; }
-            public string? seatNumber { get; set; }
-            public string? date { get; set; }
         }
 
         // POST /Akcni/Rezervovat
@@ -103,8 +97,8 @@ namespace BookovaniMista.Controllers
             else
                 datumRezervace = datumRezervace.Date;
 
-            //OK kontrola, zda místo není již zarezervované pro zvolený den
-            var alreadyBooked = await _db.Rezervace.IsMistoBookedAsync(misto.Id, datumRezervace);
+            //OK kontrola, zda místo není již zarezervované pro zvolený den — pøes IRezervaceBusiness
+            var alreadyBooked = await _rezervaceBusiness.IsMistoBookedAsync(misto.Id, datumRezervace);
             if (alreadyBooked)
                 return BadRequest("Toto místo je již zarezervované pro zvolený den.");
 

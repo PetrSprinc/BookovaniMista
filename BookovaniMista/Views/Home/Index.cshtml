@@ -19,6 +19,30 @@
         <thead>
             <tr>
                 <th>ID</th>
+                <th>Misto.Oznaceni</th>
+                <th>DatumRezervace</th>
+                <th>Zamestnanec.Jmeno</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var rezervace in Model.Rezervace)
+            {
+                <tr>
+                    <td>@rezervace.Id</td>
+                    <td>@rezervace.Misto.Oznaceni</td>
+                    <td>@rezervace.DatumRezervace</td>
+                    <td>@rezervace.Zamestnanec.Jmeno</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@* <div class="mt-5">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
                 <th>Označení sekce</th>
                 <th>Název sekce</th>
                 <th>Kapacita</th>
@@ -37,8 +61,8 @@
         </tbody>
     </table>
 </div>
-
-<div class="mt-5">
+ *@
+@* <div class="mt-5">
     <table class="table">
         <thead>
             <tr>
@@ -63,29 +87,4 @@
         </tbody>
     </table>
 </div>
-
-<div class="mt-5">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>MistoId</th>
-                <th>Misto.Oznaceni</th>
-                <th>ZamestnanecId</th>
-                <th>Zamestnanec.Jmeno</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var rezervace in Model.Rezervace)
-            {
-                <tr>
-                    <td>@rezervace.Id</td>
-                    <td>@rezervace.MistoId</td>
-                    <td>@rezervace.Misto.Oznaceni</td>
-                    <td>@rezervace.ZamestnanecId</td>
-                    <td>@rezervace.Zamestnanec.Jmeno</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+ *@

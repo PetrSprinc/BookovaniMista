@@ -1,303 +1,32 @@
-﻿@{
+﻿@using Business.BookovaniMista
+@inject Business.BookovaniMista.IMapaBusiness Mapa
+@{
     ViewData["Title"] = "Zabookovat místo";
 }
 <h1>@ViewData["Title"]</h1>
 
-<p class="lead">Možnost zabookvat jedno místo pro zvolený den. Klikněte na sekci mapy pro detail.</p>
-
-<div class="card mb-4">
-    <div class="card-body">
-        <p>Klikněte na sekci mapy pro zobrazení detailu.</p>
-
-        <div class="mb-3" style="max-width:260px;">
-            <label for="booking-date" class="form-label">Vyberte den rezervace</label>
-            <input id="booking-date" name="bookingDate" type="date" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
-            <div class="form-text">Vybraný den bude odeslán spolu se žádostí o zabookování.</div>
-        </div>
-
-        <div class="ratio ratio-16x9">
-            <svg viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
-                <!-- Horní řada: 4 sekce-->
-                <a href="#SJ1"><rect x="20"  y="20"  width="220" height="200" class="section" data-id="1" /></a>
-                <a href="#SJ2"><rect x="260" y="20"  width="220" height="200" class="section" data-id="2" /></a>
-                <a href="#SJ3"><rect x="500" y="20"  width="220" height="200" class="section" data-id="3" /></a>
-                <a href="#SJ4"><rect x="740" y="20"  width="220" height="200" class="section" data-id="4" /></a>
-
-                <!-- Dolní řada: 5 sekcí -->
-                <a href="#SS1"><rect x="20"  y="260" width="150" height="200" class="section" data-id="5" /></a>
-                <a href="#SS2"><rect x="190" y="260" width="150" height="200" class="section" data-id="6" /></a>
-                <a href="#SS3"><rect x="360" y="260" width="150" height="200" class="section" data-id="7" /></a>
-                <a href="#SS4"><rect x="530" y="260" width="150" height="200" class="section" data-id="8" /></a>
-                <a href="#SS5"><rect x="700" y="260" width="150" height="200" class="section" data-id="9" /></a>
-
-                <!-- Štítky-->
-                <a href="#SJ1"><text x="130" y="120" text-anchor="middle" class="label">Sekce jih 1</text></a>
-                <a href="#SJ2"><text x="370" y="120" text-anchor="middle" class="label">Sekce jih 2</text></a>
-                <a href="#SJ3"><text x="610" y="120" text-anchor="middle" class="label">Sekce jih 3</text></a>
-                <a href="#SJ4"><text x="850" y="120" text-anchor="middle" class="label">Sekce jih 4</text></a>
-
-                <a href="#SS1"><text x="95" y="360" text-anchor="middle" class="label">Sekce sever 1</text></a>
-                <a href="#SS2"><text x="265" y="360" text-anchor="middle" class="label">Sekce sever 2</text></a>
-                <a href="#SS3"><text x="435" y="360" text-anchor="middle" class="label">Sekce sever 3</text></a>
-                <a href="#SS4"><text x="605" y="360" text-anchor="middle" class="label">Sekce sever 4</text></a>
-                <a href="#SS5"><text x="775" y="360" text-anchor="middle" class="label">Sekce sever 5</text></a>
-            </svg>
-        </div>
-    </div>
-</div>
+@Mapa.RenderMapCard()
 
 <!-- Detailní panely pro každou sekci-->
-<div id="SJ1" class="overlay" aria-hidden="true" data-sekce-db="1">
-    <div class="detail">
-        <a class="close" href="#" aria-label="Zavřít">&times;</a>
-        <h3>Sekce jih 1</h3>
-        <p class="muted">Severní levá sekce — vizualizace míst</p>
-        <div class="seats-grid">
-            @{
-                var total = 15;
-                var rows = 3;
-                var cols = (int)Math.Ceiling(total / (double)rows);
-            }
-            <div style="display:grid; grid-template-columns:repeat(@cols, 1fr); gap:.5rem;">
-                @for (int r = 0; r < rows; r++)
-                {
-                    for (int c = 0; c < cols; c++)
-                    {
-                        var idx = r * cols + c + 1;
-                        if (idx <= total)
-                        {
-                            <button type="button" class="btn btn-outline-primary seat" data-seat="@idx">@idx</button>
-                        }
-                    }
-                }
-            </div>
-        </div>
-    </div>
-</div>
+@{
+    var sections = new[]
+    {
+        new { Id = "SJ1", Db = 1, Title = "Sekce jih 1", Subtitle = "Severní levá sekce — vizualizace míst", Total = 15, Rows = 3 },
+        new { Id = "SJ2", Db = 2, Title = "Sekce jih 2", Subtitle = "Severní střed-levo — vizualizace míst", Total = 12, Rows = 3 },
+        new { Id = "SJ3", Db = 3, Title = "Sekce jih 3", Subtitle = "Severní střed-pravo — vizualizace míst", Total = 18, Rows = 3 },
+        new { Id = "SJ4", Db = 4, Title = "Sekce jih 4", Subtitle = "Severní pravá sekce — vizualizace míst", Total = 6, Rows = 3 },
+        new { Id = "SS1", Db = 5, Title = "Sekce sever 1", Subtitle = "Jižní 1/5 — vizualizace míst", Total = 12, Rows = 3 },
+        new { Id = "SS2", Db = 6, Title = "Sekce sever 2", Subtitle = "Jižní 2/5 — vizualizace míst", Total = 12, Rows = 3 },
+        new { Id = "SS3", Db = 7, Title = "Sekce sever 3", Subtitle = "Jižní 3/5 — vizualizace míst", Total = 12, Rows = 3 },
+        new { Id = "SS4", Db = 8, Title = "Sekce sever 4", Subtitle = "Jižní 4/5 — vizualizace míst", Total = 18, Rows = 3 },
+        new { Id = "SS5", Db = 9, Title = "Sekce sever 5", Subtitle = "Jižní 5/5 — vizualizace míst", Total = 6, Rows = 3 }
+    };
+}
 
-<div id="SJ2" class="overlay" aria-hidden="true" data-sekce-db="2">
-    <div class="detail">
-        <a class="close" href="#" aria-label="Zavřít">&times;</a>
-        <h3>Sekce jih 2</h3>
-        <p class="muted">Severní střed-levo — vizualizace míst</p>
-        <div class="seats-grid">
-            @{
-                total = 18;
-                rows = 3;
-                cols = (int)Math.Ceiling(total / (double)rows);
-            }
-            <div style="display:grid; grid-template-columns:repeat(@cols, 1fr); gap:.5rem;">
-                @for (int r = 0; r < rows; r++)
-                {
-                    for (int c = 0; c < cols; c++)
-                    {
-                        var idx = r * cols + c + 1;
-                        if (idx <= total)
-                        {
-                            <button type="button" class="btn btn-outline-primary seat" data-seat="@idx">@idx</button>
-                        }
-                    }
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="SJ3" class="overlay" aria-hidden="true" data-sekce-db="3">
-    <div class="detail">
-        <a class="close" href="#" aria-label="Zavřít">&times;</a>
-        <h3>Sekce jih 3</h3>
-        <p class="muted">Severní střed-pravo — vizualizace míst</p>
-        <div class="seats-grid">
-            @{
-                total = 18;
-                rows = 3;
-                cols = (int)Math.Ceiling(total / (double)rows);
-            }
-            <div style="display:grid; grid-template-columns:repeat(@cols, 1fr); gap:.5rem;">
-                @for (int r = 0; r < rows; r++)
-                {
-                    for (int c = 0; c < cols; c++)
-                    {
-                        var idx = r * cols + c + 1;
-                        if (idx <= total)
-                        {
-                            <button type="button" class="btn btn-outline-primary seat" data-seat="@idx">@idx</button>
-                        }
-                    }
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="SJ4" class="overlay" aria-hidden="true" data-sekce-db="4">
-    <div class="detail">
-        <a class="close" href="#" aria-label="Zavřít">&times;</a>
-        <h3>Sekce jih 4</h3>
-        <p class="muted">Severní pravá sekce — vizualizace míst</p>
-        <div class="seats-grid">
-            @{
-                total = 6;
-                rows = 3;
-                cols = (int)Math.Ceiling(total / (double)rows);
-            }
-            <div style="display:grid; grid-template-columns:repeat(@cols, 1fr); gap:.5rem;">
-                @for (int r = 0; r < rows; r++)
-                {
-                    for (int c = 0; c < cols; c++)
-                    {
-                        var idx = r * cols + c + 1;
-                        if (idx <= total)
-                        {
-                            <button type="button" class="btn btn-outline-primary seat" data-seat="@idx">@idx</button>
-                        }
-                    }
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="SS1" class="overlay" aria-hidden="true" data-sekce-db="5">
-    <div class="detail">
-        <a class="close" href="#" aria-label="Zavřít">&times;</a>
-        <h3>Sekce sever 1</h3>
-        <p class="muted">Jižní 1/5 — vizualizace míst</p>
-        <div class="seats-grid">
-            @{
-                total = 12;
-                rows = 3;
-                cols = (int)Math.Ceiling(total / (double)rows);
-            }
-            <div style="display:grid; grid-template-columns:repeat(@cols, 1fr); gap:.5rem;">
-                @for (int r = 0; r < rows; r++)
-                {
-                    for (int c = 0; c < cols; c++)
-                    {
-                        var idx = r * cols + c + 1;
-                        if (idx <= total)
-                        {
-                            <button type="button" class="btn btn-outline-primary seat" data-seat="@idx">@idx</button>
-                        }
-                    }
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="SS2" class="overlay" aria-hidden="true" data-sekce-db="6">
-    <div class="detail">
-        <a class="close" href="#" aria-label="Zavřít">&times;</a>
-        <h3>Sekce sever 2</h3>
-        <p class="muted">Jižní 2/5 — vizualizace míst</p>
-        <div class="seats-grid">
-            @{
-                total = 12;
-                rows = 3;
-                cols = (int)Math.Ceiling(total / (double)rows);
-            }
-            <div style="display:grid; grid-template-columns:repeat(@cols, 1fr); gap:.5rem;">
-                @for (int r = 0; r < rows; r++)
-                {
-                    for (int c = 0; c < cols; c++)
-                    {
-                        var idx = r * cols + c + 1;
-                        if (idx <= total)
-                        {
-                            <button type="button" class="btn btn-outline-primary seat" data-seat="@idx">@idx</button>
-                        }
-                    }
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="SS3" class="overlay" aria-hidden="true" data-sekce-db="7">
-    <div class="detail">
-        <a class="close" href="#" aria-label="Zavřít">&times;</a>
-        <h3>Sekce sever 3</h3>
-        <p class="muted">Jižní 3/5 — vizualizace míst</p>
-        <div class="seats-grid">
-            @{
-                total = 12;
-                rows = 3;
-                cols = (int)Math.Ceiling(total / (double)rows);
-            }
-            <div style="display:grid; grid-template-columns:repeat(@cols, 1fr); gap:.5rem;">
-                @for (int r = 0; r < rows; r++)
-                {
-                    for (int c = 0; c < cols; c++)
-                    {
-                        var idx = r * cols + c + 1;
-                        if (idx <= total)
-                        {
-                            <button type="button" class="btn btn-outline-primary seat" data-seat="@idx">@idx</button>
-                        }
-                    }
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="SS4" class="overlay" aria-hidden="true" data-sekce-db="8">
-    <div class="detail">
-        <a class="close" href="#" aria-label="Zavřít">&times;</a>
-        <h3>Sekce sever 4</h3>
-        <p class="muted">Jižní 4/5 — vizualizace míst</p>
-        <div class="seats-grid">
-            @{
-                total = 18;
-                rows = 3;
-                cols = (int)Math.Ceiling(total / (double)rows);
-            }
-            <div style="display:grid; grid-template-columns:repeat(@cols, 1fr); gap:.5rem;">
-                @for (int r = 0; r < rows; r++)
-                {
-                    for (int c = 0; c < cols; c++)
-                    {
-                        var idx = r * cols + c + 1;
-                        if (idx <= total)
-                        {
-                            <button type="button" class="btn btn-outline-primary seat" data-seat="@idx">@idx</button>
-                        }
-                    }
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="SS5" class="overlay" aria-hidden="true" data-sekce-db="9">
-    <div class="detail">
-        <a class="close" href="#" aria-label="Zavřít">&times;</a>
-        <h3>Sekce sever 5</h3>
-        <p class="muted">Jižní 5/5 — vizualizace míst</p>
-        <div class="seats-grid">
-            @{
-                total = 6;
-                rows = 3;
-                cols = (int)Math.Ceiling(total / (double)rows);
-            }
-            <div style="display:grid; grid-template-columns:repeat(@cols, 1fr); gap:.5rem;">
-                @for (int r = 0; r < rows; r++)
-                {
-                    for (int c = 0; c < cols; c++)
-                    {
-                        var idx = r * cols + c + 1;
-                        if (idx <= total)
-                        {
-                            <button type="button" class="btn btn-outline-primary seat">@idx</button>
-                        }
-                    }
-                }
-            </div>
-        </div>
-    </div>
-</div>
+@foreach (var s in sections)
+{
+    @Mapa.RenderSectionOverlay(s.Db, s.Id, s.Title, s.Subtitle, s.Total, s.Rows)
+}
 
 @* Confirm dialog (HTML-only, CSS + JS below) *@
 <div id="confirm-dialog" class="confirm-overlay" aria-hidden="true">
@@ -439,7 +168,7 @@
                     alert('Chyba při ukládání rezervace: ' + (err && err.message ? err.message : 'server error'));
                 }).finally(function () {
                     dialog.setAttribute('aria-hidden', 'true');
-                    dialog.style.display = 'none';
+                    dialog.style.display = 'none',
                     currentButton = null;
                 });
             });

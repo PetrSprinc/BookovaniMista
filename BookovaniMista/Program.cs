@@ -21,6 +21,8 @@ builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = options.DefaultPolicy;
 });
 builder.Services.AddRazorPages();
+builder.Services.AddScoped<Business.BookovaniMista.IMapaBusiness, Business.BookovaniMista.MapaBusiness>();
+builder.Services.AddScoped<Business.BookovaniMista.IRezervaceBusiness, Business.BookovaniMista.RezervaceBusiness>();
 
 var app = builder.Build();
 
@@ -49,7 +51,7 @@ app.MapControllerRoute(
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<BookovaniMistaDbContext>();
-    SeedData.Initialize(db);
+    await SeedData.InitializeAsync(db);
 }
 
 app.Run();

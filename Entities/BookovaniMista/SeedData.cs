@@ -1,18 +1,20 @@
 using Entities.BookovaniMista;
 using Entities.BookovaniMista.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace BookovaniMista.Infrastructure
 {
     public static class SeedData
     {
-        public static void Initialize(BookovaniMistaDbContext db)
+        public static async Task InitializeAsync(BookovaniMistaDbContext db)
         {
-            if (!db.Sekce.Any())
+            if (!await db.Sekce.AnyAsync())
             {
                 var defaultSekce = new[]
                 {
                     new Sekce { Oznaceni = "SJ1", Nazev = "Sekce jih 1", Kapacita = 15 },
-                    new Sekce { Oznaceni = "SJ2", Nazev = "Sekce jih 2", Kapacita = 18 }, //asi
+                    new Sekce { Oznaceni = "SJ2", Nazev = "Sekce jih 2", Kapacita = 12 },
                     new Sekce { Oznaceni = "SJ3", Nazev = "Sekce jih 3", Kapacita = 18 },
                     new Sekce { Oznaceni = "SJ4", Nazev = "Sekce jih 4", Kapacita = 6  },
                     new Sekce { Oznaceni = "SS1", Nazev = "Sekce sever 1", Kapacita = 12 },
@@ -22,13 +24,13 @@ namespace BookovaniMista.Infrastructure
                     new Sekce { Oznaceni = "SS5", Nazev = "Sekce sever 5", Kapacita = 6  },
                 };
 
-                db.Sekce.AddRange(defaultSekce);
-                db.SaveChanges();
+                await db.Sekce.AddRangeAsync(defaultSekce);
+                await db.SaveChangesAsync();
             }
 
-            if (!db.Mista.Any())
+            if (!await db.Mista.AnyAsync())
             {
-                var sekceList = db.Sekce.OrderBy(s => s.Id).ToList();
+                var sekceList = await db.Sekce.OrderBy(s => s.Id).ToListAsync();
                 var mista = new List<Misto>();
 
                 foreach (var s in sekceList)
@@ -48,12 +50,12 @@ namespace BookovaniMista.Infrastructure
 
                 if (mista.Any())
                 {
-                    db.Mista.AddRange(mista);
-                    db.SaveChanges();
+                    await db.Mista.AddRangeAsync(mista);
+                    await db.SaveChangesAsync();
                 }
             }
 
-            if (!db.Zamestnanci.Any())
+            if (!await db.Zamestnanci.AnyAsync())
             {
                 var defaultZamestnanec = new[]
                 {
@@ -64,28 +66,28 @@ namespace BookovaniMista.Infrastructure
                     new Zamestnanec { Jmeno = "Lucie Procházková", Email = "lucie.prochazkova95@testmail.cz" },
                 };
 
-                db.Zamestnanci.AddRange(defaultZamestnanec);
-                db.SaveChanges();
+                await db.Zamestnanci.AddRangeAsync(defaultZamestnanec);
+                await db.SaveChangesAsync();
             }
 
-            if (!db.Rezervace.Any())
+            if (!await db.Rezervace.AnyAsync())
             {
-                var mistaList = db.Mista.OrderBy(m => m.Id).ToList();
-                var zamestnanciList = db.Zamestnanci.OrderBy(z => z.Id).ToList();
+                var mistaList = await db.Mista.OrderBy(m => m.Id).ToListAsync();
+                var zamestnanciList = await db.Zamestnanci.OrderBy(z => z.Id).ToListAsync();
 
                 var defaultRezervace = new[]
                 {
-                    new Rezervace {  Misto = mistaList[0] , Zamestnanec = zamestnanciList[0] , DatumRezervace = DateTime.Now.AddDays(-1) },
-                    new Rezervace {  Misto = mistaList[11] , Zamestnanec = zamestnanciList[1] , DatumRezervace = DateTime.Now.AddDays(-1) },
-                    new Rezervace {  Misto = mistaList[22] , Zamestnanec = zamestnanciList[2] , DatumRezervace = DateTime.Now },
-                    new Rezervace {  Misto = mistaList[33] , Zamestnanec = zamestnanciList[3] , DatumRezervace = DateTime.Now.AddDays(1) },
-                    new Rezervace {  Misto = mistaList[44] , Zamestnanec = zamestnanciList[3] , DatumRezervace = DateTime.Now.AddDays(1) },
-                    new Rezervace {  Misto = mistaList[44] , Zamestnanec = zamestnanciList[0] , DatumRezervace = DateTime.Now.AddDays(2) },
-                    new Rezervace {  Misto = mistaList[44] , Zamestnanec = zamestnanciList[0] , DatumRezervace = DateTime.Now.AddDays(3) },
+                    new Rezervace {  Misto = mistaList[0] , Zamestnanec = zamestnanciList[0] , DatumRezervace = DateTime.Now.AddDays(-1).Date },
+                    new Rezervace {  Misto = mistaList[11] , Zamestnanec = zamestnanciList[1] , DatumRezervace = DateTime.Now.AddDays(-1).Date },
+                    new Rezervace {  Misto = mistaList[22] , Zamestnanec = zamestnanciList[2] , DatumRezervace = DateTime.Now.Date },
+                    new Rezervace {  Misto = mistaList[33] , Zamestnanec = zamestnanciList[3] , DatumRezervace = DateTime.Now.AddDays(1).Date },
+                    new Rezervace {  Misto = mistaList[44] , Zamestnanec = zamestnanciList[3] , DatumRezervace = DateTime.Now.AddDays(1).Date },
+                    new Rezervace {  Misto = mistaList[44] , Zamestnanec = zamestnanciList[0] , DatumRezervace = DateTime.Now.AddDays(2).Date },
+                    new Rezervace {  Misto = mistaList[44] , Zamestnanec = zamestnanciList[0] , DatumRezervace = DateTime.Now.AddDays(3).Date },
                 };
 
-                db.Rezervace.AddRange(defaultRezervace);
-                db.SaveChanges();
+                await db.Rezervace.AddRangeAsync(defaultRezervace);
+                await db.SaveChangesAsync();
             }
         }
     }

@@ -1,13 +1,9 @@
 using Entities.BookovaniMista;
 using Entities.BookovaniMista.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using BookovaniMista.ViewModels;
-using System;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace BookovaniMista.Controllers
 {
@@ -51,13 +47,12 @@ namespace BookovaniMista.Controllers
         }
 
         // Vytíženost: volitelnì od/do (GET), výchozí od zaèátku mìsíce do jeho konce
-        public IActionResult Vytizenost(DateTime? odDatum, DateTime? doDatum)
+        public async Task<IActionResult> Vytizenost(DateTime? odDatum, DateTime? doDatum)
         {
             var today = DateTime.Today;
             var odDatumCalc = odDatum ?? new DateTime(today.Year, today.Month, 1);
             var doDatumCalc = doDatum ?? odDatumCalc.AddMonths(1).AddDays(-1);
 
-            // Vyber rezervací v intervalu, spoèítat DISTINCT datumy (poèet dnù) pro každé místo
             var data = _context.Rezervace
                 .Where(r => r.DatumRezervace >= odDatumCalc && r.DatumRezervace <= doDatumCalc)
                 .GroupBy(r => r.MistoId)
@@ -68,18 +63,19 @@ namespace BookovaniMista.Controllers
                 });
 
             // Pøipojit informace o místì a sekci
-            var rows = data
+            var rowsQuery = data
                 .Join(_context.Mista.Include(m => m.Sekce),
                       g => g.MistoId,
                       m => m.Id,
-                      (g, m) => new VytizenostRadek
+                      (g, m) => new VytizenostRadekViewModel
                       {
                           MistoOznaceni = m.Oznaceni,
                           SekceNazev = string.IsNullOrEmpty(m.Sekce.Nazev) ? m.Sekce.Oznaceni : m.Sekce.Nazev,
                           BookedDays = g.DaysCount
                       })
-                .OrderByDescending(r => r.BookedDays)
-                .ToList();
+                .OrderByDescending(r => r.BookedDays);
+
+            var rows = await rowsQuery.ToListAsync();
 
             var vm = new VytizenostViewModel
             {
@@ -102,7 +98,7 @@ namespace BookovaniMista.Controllers
             if (!string.IsNullOrEmpty(email))
             {
                 var byEmail = await _context.Zamestnanci
-                    .FirstOrDefaultAsync(z => z.Email != null && z.Email.ToLower() == email.ToLower());
+                    .FirstOrDefaultAsync(z => z.Email.ToLower() == email.ToLower());
                 if (byEmail != null) return byEmail;
             }
 
@@ -110,13 +106,10 @@ namespace BookovaniMista.Controllers
             var nameClaim = User.Identity?.Name;
             if (!string.IsNullOrEmpty(nameClaim))
             {
-                var shortName = nameClaim.Contains("\\") ? nameClaim.Split('\\').Last() : nameClaim;
-                // Zkusíme najít podle jména (èásteèné porovnání)
                 var byName = await _context.Zamestnanci
-                    .FirstOrDefaultAsync(z => z.Jmeno != null && z.Jmeno.Contains(shortName, StringComparison.OrdinalIgnoreCase));
+                    .FirstOrDefaultAsync(z => z.Jmeno != null && z.Jmeno == nameClaim);
                 if (byName != null) return byName;
             }
-
             // nenalezeno
             return null;
         }

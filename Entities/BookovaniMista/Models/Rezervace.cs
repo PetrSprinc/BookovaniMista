@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-
-namespace Entities.BookovaniMista.Models
+﻿namespace Entities.BookovaniMista.Models
 {
     public class Rezervace
     {

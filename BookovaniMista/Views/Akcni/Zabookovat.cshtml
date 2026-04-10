@@ -1,18 +1,24 @@
 ﻿@using Business.BookovaniMista
-@inject Business.BookovaniMista.IMapaBusiness Mapa
+@using Business.BookovaniMista.Interfaces
+@inject IMapaBusiness Mapa
 @{
     ViewData["Title"] = "Zabookovat místo";
+    // preferuj hodnotu předanou z controlleru, fallback na claim / identity
+    string? currentUsername = ViewData["CurrentUsername"] as string
+                              ?? User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                              ?? User.Identity?.Name;
 }
 <h1>@ViewData["Title"]</h1>
 
-@Mapa.RenderMapCard()
+@* Přesunuto do business vrstvy, vykreslí mapu se zvoleným datem (výchozí dnes) *@
+@await Mapa.RenderMapCardAsync(DateTime.Today)
 
 <!-- Detailní panely pro každou sekci-->
 @{
     var sections = new[]
     {
         new { Id = "SJ1", Db = 1, Title = "Sekce jih 1", Subtitle = "Severní levá sekce — vizualizace míst", Total = 15, Rows = 3 },
-        new { Id = "SJ2", Db = 2, Title = "Sekce jih 2", Subtitle = "Severní střed-levo — vizualizace míst", Total = 12, Rows = 3 },
+        new { Id = "SJ2", Db = 2, Title = "Sekce jih 2", Subtitle = "Severní střed-levo — vizualizace míst", Total = 18, Rows = 3 },
         new { Id = "SJ3", Db = 3, Title = "Sekce jih 3", Subtitle = "Severní střed-pravo — vizualizace míst", Total = 18, Rows = 3 },
         new { Id = "SJ4", Db = 4, Title = "Sekce jih 4", Subtitle = "Severní pravá sekce — vizualizace míst", Total = 6, Rows = 3 },
         new { Id = "SS1", Db = 5, Title = "Sekce sever 1", Subtitle = "Jižní 1/5 — vizualizace míst", Total = 12, Rows = 3 },
@@ -25,7 +31,7 @@
 
 @foreach (var s in sections)
 {
-    @Mapa.RenderSectionOverlay(s.Db, s.Id, s.Title, s.Subtitle, s.Total, s.Rows)
+    @await Mapa.RenderSectionOverlayAsync(s.Db, s.Id, s.Title, s.Subtitle, s.Total, s.Rows, DateTime.Today, currentUsername)
 }
 
 @* Confirm dialog (HTML-only, CSS + JS below) *@
@@ -56,14 +62,18 @@
 
         /* Grid míst - container display je definován inline, zde základní styly */
         .seats-grid { margin-top:.75rem; }
-        .seat { min-height:48px; display:flex; align-items:center; justify-content:center; font-weight:600; }
+        .seat { min-height:48px; display:flex; align-items:center; justify-content:center; font-weight:600; border-radius:.375rem; padding:.5rem 0; }
+
+        /* Stav míst: available / booked by other / booked by me */
+        .seat.available { background: #198754; color: #fff; border: none; } /* zelená */
+        .seat.booked-other { background: #dc3545; color: #fff; border: none; } /* červená */
+        .seat.booked-me { background: #0d6efd; color: #fff; border: none; } /* modrá */
 
         /* Confirm dialog styles */
         .confirm-overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); z-index:2000; }
         .confirm-overlay[aria-hidden="true"] { display:none; }
         .confirm-dialog { background:#fff; padding:1rem 1.25rem; border-radius:.5rem; width:320px; max-width:90%; box-shadow:0 12px 40px rgba(0,0,0,.25); }
         .confirm-actions { display:flex; gap:.5rem; justify-content:flex-end; margin-top:1rem; }
-        .seat.booked { opacity:.6; pointer-events:none; }
     </style>
 }
 
@@ -86,7 +96,7 @@
             const target = ev.target;
             const btn = (target && typeof target.closest === 'function') ? target.closest('.seat') : null;
             if (!btn) return;
-            if (btn.classList.contains('booked') || btn.disabled) return;
+            if (btn.classList.contains('booked-other') || btn.disabled) return;
 
             ev.preventDefault();
             currentButton = btn;
@@ -129,8 +139,8 @@
                 const sekceDb = overlay ? overlay.getAttribute('data-sekce-db') : (btn.getAttribute('data-sekce-id') || '');
                 const selectedDate = dateInput ? dateInput.value : '';
 
-                // Lokální vizuální akce: označit zabookované
-                btn.classList.add('booked');
+                // Lokální vizuální akce: označit zabookované modře pro uživatele
+                btn.classList.add('booked-me');
                 btn.disabled = true;
 
                 // Sestavit payload pro server
@@ -155,7 +165,7 @@
                 }).then(function (resp) {
                     if (!resp.ok) {
                         // rollback vizuální změny při chybě
-                        btn.classList.remove('booked');
+                        btn.classList.remove('booked-me');
                         btn.disabled = false;
                         return resp.text().then(t => { throw new Error(t || resp.statusText); });
                     }
@@ -168,7 +178,7 @@
                     alert('Chyba při ukládání rezervace: ' + (err && err.message ? err.message : 'server error'));
                 }).finally(function () {
                     dialog.setAttribute('aria-hidden', 'true');
-                    dialog.style.display = 'none',
+                    dialog.style.display = 'none';
                     currentButton = null;
                 });
             });

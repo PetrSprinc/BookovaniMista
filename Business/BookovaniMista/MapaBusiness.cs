@@ -1,15 +1,25 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
+using Microsoft.EntityFrameworkCore;
+using Entities.BookovaniMista;
+using Business.BookovaniMista.Interfaces;
 
 namespace Business.BookovaniMista
 {
     public class MapaBusiness : IMapaBusiness
     {
-        public IHtmlContent RenderMapCard()
+        private readonly BookovaniMistaDbContext _db;
+
+        public MapaBusiness(BookovaniMistaDbContext db) => _db = db;
+
+        public Task<IHtmlContent> RenderMapCardAsync(DateTime date)
         {
-            var today = DateTime.Today.ToString("yyyy-MM-dd");
+            // statický markup, jen nastavíme value inputu podle date
+            var today = date.ToString("yyyy-MM-dd");
             var sb = new StringBuilder();
 
             sb.Append("<div class=\"card mb-4\">");
@@ -55,13 +65,38 @@ namespace Business.BookovaniMista
             sb.Append("</div>"); // card-body
             sb.Append("</div>"); // card
 
-            return new HtmlString(sb.ToString());
+            return Task.FromResult<IHtmlContent>(new HtmlString(sb.ToString()));
         }
-        public IHtmlContent RenderSectionOverlay(int sekceDbId, string anchorId, string title, string subtitle, int total, int rows)
+
+        public async Task<IHtmlContent> RenderSectionOverlayAsync(int sekceDbId, string anchorId, string title, string subtitle, int total, int rows, DateTime date, string? currentUsername)
         {
             if (string.IsNullOrEmpty(anchorId)) throw new ArgumentException("anchorId is required", nameof(anchorId));
             if (rows <= 0) rows = 1;
             var cols = (int)Math.Ceiling(total / (double)rows);
+
+            var d = date.Date;
+
+            // Získat rezervace pro daný den a sekci (Misto + reservující jméno)
+            var rezervace = await (from r in _db.Rezervace
+                                   join m in _db.Mista on r.MistoId equals m.Id
+                                   join z in _db.Zamestnanci on r.ZamestnanecId equals z.Id
+                                   where r.DatumRezervace >= d && r.DatumRezervace < d.AddDays(1) && m.SekceId == sekceDbId
+                                   select new { m.Oznaceni, m.Id, ReservujiciJmeno = z.Jmeno }).ToListAsync();
+
+            var bookedIndices = new Dictionary<int, string?>();
+
+            foreach (var item in rezervace)
+            {
+                if (string.IsNullOrEmpty(item.Oznaceni)) continue;
+                const string token = "-M";
+                var pos = item.Oznaceni.LastIndexOf(token, StringComparison.OrdinalIgnoreCase);
+                if (pos < 0) continue;
+                var suffix = item.Oznaceni.Substring(pos + token.Length);
+                if (int.TryParse(suffix, out var idx) && idx > 0)
+                {
+                    bookedIndices[idx] = item.ReservujiciJmeno;
+                }
+            }
 
             var sb = new StringBuilder();
 
@@ -81,7 +116,25 @@ namespace Business.BookovaniMista
                     var idx = r * cols + c + 1;
                     if (idx <= total)
                     {
-                        sb.Append($"<button type=\"button\" class=\"btn btn-outline-primary seat\" data-seat=\"{idx}\">{idx}</button>");
+                        if (bookedIndices.TryGetValue(idx, out var reservujiciJmeno) && !string.IsNullOrEmpty(reservujiciJmeno))
+                        {
+                            // rezervováno
+                            if (!string.IsNullOrEmpty(currentUsername) && string.Equals(reservujiciJmeno, currentUsername, StringComparison.OrdinalIgnoreCase))
+                            {
+                                // moje rezervace -> modrá
+                                sb.Append($"<button type=\"button\" class=\"btn seat booked-me\" data-seat=\"{idx}\" disabled>{idx}</button>");
+                            }
+                            else
+                            {
+                                // obsazeno jiným -> červená
+                                sb.Append($"<button type=\"button\" class=\"btn seat booked-other\" data-seat=\"{idx}\" disabled>{idx}</button>");
+                            }
+                        }
+                        else
+                        {
+                            // volné -> zelené
+                            sb.Append($"<button type=\"button\" class=\"btn seat available\" data-seat=\"{idx}\">{idx}</button>");
+                        }
                     }
                 }
             }

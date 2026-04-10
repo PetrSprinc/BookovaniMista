@@ -1,9 +1,7 @@
-using Entities.BookovaniMista;
 using Entities.BookovaniMista.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
 
-namespace BookovaniMista.Infrastructure
+namespace Entities.BookovaniMista
 {
     public static class SeedData
     {
@@ -11,10 +9,10 @@ namespace BookovaniMista.Infrastructure
         {
             if (!await db.Sekce.AnyAsync())
             {
-                var defaultSekce = new[]
+                var defaultSekce = new[] //duplicitní s Zabookovat
                 {
                     new Sekce { Oznaceni = "SJ1", Nazev = "Sekce jih 1", Kapacita = 15 },
-                    new Sekce { Oznaceni = "SJ2", Nazev = "Sekce jih 2", Kapacita = 12 },
+                    new Sekce { Oznaceni = "SJ2", Nazev = "Sekce jih 2", Kapacita = 18 },
                     new Sekce { Oznaceni = "SJ3", Nazev = "Sekce jih 3", Kapacita = 18 },
                     new Sekce { Oznaceni = "SJ4", Nazev = "Sekce jih 4", Kapacita = 6  },
                     new Sekce { Oznaceni = "SS1", Nazev = "Sekce sever 1", Kapacita = 12 },

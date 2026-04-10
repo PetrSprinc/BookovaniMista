@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using BookovaniMista.Models;
 using Microsoft.AspNetCore.Mvc;
 using Entities.BookovaniMista;
@@ -17,18 +19,19 @@ namespace BookovaniMista.Controllers
             _db = db;
         }
 
-        public async Task<IActionResult> IndexAsync()
+        public async Task<IActionResult> Index()
         {
             var vm = new ViewModel
             {
                 Sekce = await _db.Sekce.OrderBy(s => s.Id).ToListAsync(),
-                Mista = await _db.Mista.OrderBy(m => m.Id).ToListAsync(),
+                Mista = await _db.Mista.Include(m => m.Sekce).OrderBy(m => m.Id).ToListAsync(),
                 Zamestnanci = await _db.Zamestnanci.OrderBy(z => z.Id).ToListAsync(),
-                Rezervace = await _db.Rezervace.OrderBy(r => r.Id).ToListAsync()
+                Rezervace = await _db.Rezervace.Include(r => r.Misto).Include(r => r.Zamestnanec).OrderBy(r => r.Id).ToListAsync()
             };
 
             return View(vm);
         }
+
         public IActionResult Privacy()
         {
             return View();
@@ -40,25 +43,28 @@ namespace BookovaniMista.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        //seøazení listù podle ID pro zobrazení
+        // oddìlené akce pro seznamy (opraveny zdroje dat)
         public async Task<IActionResult> Sekce()
         {
             var serazenyList = await _db.Sekce.OrderBy(s => s.Id).ToListAsync();
             return View(serazenyList);
         }
+
         public async Task<IActionResult> Mista()
         {
-            var serazenyList = await _db.Sekce.OrderBy(s => s.Id).ToListAsync();
+            var serazenyList = await _db.Mista.Include(m => m.Sekce).OrderBy(m => m.Id).ToListAsync();
             return View(serazenyList);
         }
+
         public async Task<IActionResult> Zamestnanci()
         {
-            var serazenyList = await _db.Sekce.OrderBy(s => s.Id).ToListAsync();
+            var serazenyList = await _db.Zamestnanci.OrderBy(z => z.Id).ToListAsync();
             return View(serazenyList);
         }
+
         public async Task<IActionResult> Rezervace()
         {
-            var serazenyList = await _db.Sekce.OrderBy(s => s.Id).ToListAsync();
+            var serazenyList = await _db.Rezervace.Include(r => r.Misto).Include(r => r.Zamestnanec).OrderBy(r => r.Id).ToListAsync();
             return View(serazenyList);
         }
     }

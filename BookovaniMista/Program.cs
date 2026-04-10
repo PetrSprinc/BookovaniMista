@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.EntityFrameworkCore;
 using Entities.BookovaniMista;
-using Microsoft.Extensions.DependencyInjection;
-using BookovaniMista.Infrastructure;
+using Business.BookovaniMista.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,8 +20,9 @@ builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = options.DefaultPolicy;
 });
 builder.Services.AddRazorPages();
-builder.Services.AddScoped<Business.BookovaniMista.IMapaBusiness, Business.BookovaniMista.MapaBusiness>();
-builder.Services.AddScoped<Business.BookovaniMista.IRezervaceBusiness, Business.BookovaniMista.RezervaceBusiness>();
+builder.Services.AddScoped<IMapaBusiness, Business.BookovaniMista.MapaBusiness>();
+builder.Services.AddScoped<IRezervaceBusiness, Business.BookovaniMista.RezervaceBusiness>();
+builder.Services.AddScoped<ICommonBusiness, Business.BookovaniMista.CommonBusiness>();
 
 var app = builder.Build();
 

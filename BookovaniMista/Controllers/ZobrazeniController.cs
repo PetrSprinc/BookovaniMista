@@ -2,27 +2,29 @@ using Entities.BookovaniMista;
 using Entities.BookovaniMista.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using BookovaniMista.ViewModels;
-using System.Security.Claims;
+using Entities.BookovaniMista.ViewModels;
+using Business.BookovaniMista.Interfaces;
 
 namespace BookovaniMista.Controllers
 {
     public class ZobrazeniController : Controller
     {
         private readonly ILogger<ZobrazeniController> _logger;
-        private readonly BookovaniMistaDbContext _context;
+        private readonly BookovaniMistaDbContext _db;
+        private readonly ICommonBusiness _commonBusiness;
 
-        public ZobrazeniController(ILogger<ZobrazeniController> logger, BookovaniMistaDbContext context)
+        public ZobrazeniController(ILogger<ZobrazeniController> logger, BookovaniMistaDbContext db, ICommonBusiness commonBusiness)
         {
             _logger = logger;
-            _context = context;
+            _db = db;
+            _commonBusiness = commonBusiness;
         }
 
         // Historie: zobrazí pouze rezervace vytvoøené pøihlášeným uživatelem (max 100 posledních)
         public async Task<IActionResult> Historie()
         {
             // Najít aktuálního zamìstnance podle claimu (email / upn / User.Identity.Name)
-            var zam = await GetCurrentZamestnanecAsync();
+            var zam = await _commonBusiness.GetCurrentZamestnanecAsync(User);
             if (zam == null)
             {
                 ViewData["ErrorMessage"] = "Nepodaøilo se identifikovat uživatele v DB (zkontrolujte email).";
@@ -30,7 +32,7 @@ namespace BookovaniMista.Controllers
             }
 
             // Naèíst posledních 100 rezervací tohoto zamìstnance (s místem a sekcí)
-            var rezervace = await _context.Rezervace
+            var rezervace = await _db.Rezervace
                 .Where(r => r.ZamestnanecId == zam.Id)
                 .Include(r => r.Misto)
                     .ThenInclude(m => m.Sekce)
@@ -49,69 +51,22 @@ namespace BookovaniMista.Controllers
         // Vytíženost: volitelnì od/do (GET), výchozí od zaèátku mìsíce do jeho konce
         public async Task<IActionResult> Vytizenost(DateTime? odDatum, DateTime? doDatum)
         {
-            var today = DateTime.Today;
-            var odDatumCalc = odDatum ?? new DateTime(today.Year, today.Month, 1);
-            var doDatumCalc = doDatum ?? odDatumCalc.AddMonths(1).AddDays(-1);
+            var result = await _commonBusiness.GetVytizenostAsync(odDatum, doDatum);
 
-            var data = _context.Rezervace
-                .Where(r => r.DatumRezervace >= odDatumCalc && r.DatumRezervace <= doDatumCalc)
-                .GroupBy(r => r.MistoId)
-                .Select(g => new
-                {
-                    MistoId = g.Key,
-                    DaysCount = g.Select(r => r.DatumRezervace.Date).Distinct().Count()
-                });
-
-            // Pøipojit informace o místì a sekci
-            var rowsQuery = data
-                .Join(_context.Mista.Include(m => m.Sekce),
-                      g => g.MistoId,
-                      m => m.Id,
-                      (g, m) => new VytizenostRadekViewModel
-                      {
-                          MistoOznaceni = m.Oznaceni,
-                          SekceNazev = string.IsNullOrEmpty(m.Sekce.Nazev) ? m.Sekce.Oznaceni : m.Sekce.Nazev,
-                          BookedDays = g.DaysCount
-                      })
-                .OrderByDescending(r => r.BookedDays);
-
-            var rows = await rowsQuery.ToListAsync();
-
-            var vm = new VytizenostViewModel
+            // mapovat na ViewModel použitý ve view
+            var vm = new VytizenostResult
             {
-                Od = odDatumCalc,
-                Do = doDatumCalc,
-                Rows = rows
+                Od = result.Od,
+                Do = result.Do,
+                Rows = result.Rows.Select(r => new VytizenostRow
+                {
+                    MistoOznaceni = r.MistoOznaceni,
+                    SekceNazev = r.SekceNazev,
+                    BookedDays = r.BookedDays
+                }).ToList()
             };
 
             return View(vm);
-        }
-
-        // Helper: zjistí aktuálního Zamestnanec podle claimù (email/upn/Identity.Name)
-        private async Task<Zamestnanec?> GetCurrentZamestnanecAsync()
-        {
-            // 1) email
-            var email = User.FindFirst(ClaimTypes.Email)?.Value
-                        ?? User.FindFirst("email")?.Value
-                        ?? User.FindFirst("upn")?.Value;
-
-            if (!string.IsNullOrEmpty(email))
-            {
-                var byEmail = await _context.Zamestnanci
-                    .FirstOrDefaultAsync(z => z.Email.ToLower() == email.ToLower());
-                if (byEmail != null) return byEmail;
-            }
-
-            // 2) fallback na User.Identity.Name (napø. DOMAIN\user)
-            var nameClaim = User.Identity?.Name;
-            if (!string.IsNullOrEmpty(nameClaim))
-            {
-                var byName = await _context.Zamestnanci
-                    .FirstOrDefaultAsync(z => z.Jmeno != null && z.Jmeno == nameClaim);
-                if (byName != null) return byName;
-            }
-            // nenalezeno
-            return null;
         }
     }
 }

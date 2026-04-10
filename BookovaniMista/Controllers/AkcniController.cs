@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Entities.BookovaniMista;
 using Entities.BookovaniMista.Models;
-using Business.BookovaniMista;
+using Business.BookovaniMista.Interfaces;
 
 namespace BookovaniMista.Controllers
 {
@@ -11,119 +11,43 @@ namespace BookovaniMista.Controllers
     public partial class AkcniController : Controller
     {
         private readonly ILogger<AkcniController> _logger;
-        private readonly BookovaniMistaDbContext _db;
+        //private readonly BookovaniMistaDbContext _db;
         private readonly IRezervaceBusiness _rezervaceBusiness;
 
-        public AkcniController(ILogger<AkcniController> logger, BookovaniMistaDbContext db, IRezervaceBusiness rezervaceBusiness)
+        //public AkcniController(ILogger<AkcniController> logger, BookovaniMistaDbContext db, IRezervaceBusiness rezervaceBusiness)
+        public AkcniController(ILogger<AkcniController> logger, IRezervaceBusiness rezervaceBusiness)
         {
             _logger = logger;
-            _db = db;
+            //_db = db;
             _rezervaceBusiness = rezervaceBusiness;
         }
 
-        public IActionResult Zabookovat()
+        // Pøedáváme username (pokud ho máme) do view pomocí ViewData
+        public async Task<IActionResult> Zabookovat()
         {
+            string? currentUsername = User.FindFirst(ClaimTypes.Email)?.Value
+                                      ?? User.Identity?.Name;
+            ViewData["CurrentUsername"] = currentUsername;
+            await Task.CompletedTask; // Pøidáno pro odstranìní CS1998
             return View();
         }
 
         // POST /Akcni/Rezervovat
         [HttpPost("Rezervovat")]
-        [IgnoreAntiforgeryToken] // TODO
-        public async Task<IActionResult> Rezervovat([FromBody] RezervaceDto dto)
+        public async Task<IActionResult> Rezervovat([FromBody] RezervaceDto dto, CancellationToken ct)
         {
-            if (dto == null || dto.sekceId == null)
-                return BadRequest("Chybí data rezervace (sekceId).");
+            if (!User.Identity?.IsAuthenticated ?? true) return Unauthorized();
+            var userIdentifier = User.FindFirst(ClaimTypes.Email)?.Value ?? User.Identity?.Name ?? string.Empty;
 
-            var sekceId = dto.sekceId.Value;
-
-            // najít sekci
-            var sekce = await _db.Sekce.FirstOrDefaultAsync(s => s.Id == sekceId);
-            if (sekce == null)
-                return BadRequest("Sekce nenalezena.");
-
-            // parsování èísla místa (pokud bylo pøedáno)
-            int seatIndex = 0;
-            if (!string.IsNullOrEmpty(dto.seatNumber))
-                int.TryParse(dto.seatNumber, out seatIndex);
-
-            Misto? misto = null;
-
-            // preferované hledání podle oznaèení (SJ1-M1)
-            if (seatIndex > 0 && !string.IsNullOrEmpty(sekce.Oznaceni))
+            var (success, error, rezervace) = await _rezervaceBusiness.RezervovatAsync(dto, userIdentifier, ct);
+            if (!success)
             {
-                var expected = $"{sekce.Oznaceni}-M{seatIndex}";
-                misto = await _db.Mista
-                    .Include(m => m.Sekce)
-                    .FirstOrDefaultAsync(m => m.Oznaceni == expected && m.Sekce != null && m.Sekce.Id == sekceId);
+                if (error?.Contains("nenalezena") == true) return BadRequest(error);
+                if (error?.Contains("Kolize") == true) return Conflict(error);
+                return StatusCode(500, error);
             }
 
-            // fallback: i-th místo v sekci (øazeno podle Id)
-            if (misto == null && seatIndex > 0)
-            {
-                misto = await _db.Mista
-                    .Include(m => m.Sekce)
-                    .Where(m => m.Sekce != null && m.Sekce.Id == sekceId)
-                    .OrderBy(m => m.Id)
-                    .Skip(Math.Max(0, seatIndex - 1))
-                    .FirstOrDefaultAsync();
-            }
-
-            if (misto == null)
-                return BadRequest("Místo nenalezeno pro zadanou sekci/èíslo.");
-
-            // použít aktuálnì pøihlášeného uživatele, musí být v databázi Zamestnanec
-            // TODO IsAuthenticated
-            // TODO zakomponovat email z claimù
-            if (!(User?.Identity?.IsAuthenticated ?? false))
-                return Unauthorized();
-            string? userIdentifier = User.FindFirst(ClaimTypes.Email)?.Value
-                                     ?? User.FindFirst("email")?.Value
-                                     ?? User.Identity?.Name;
-            Zamestnanec? zam = null;
-            if (!string.IsNullOrEmpty(userIdentifier))
-            {
-                // nejprve podle emailu, pak podle jména
-                zam = await _db.Zamestnanci.FirstOrDefaultAsync(z => z.Email != null && z.Email == userIdentifier);
-                if (zam == null)
-                    zam = await _db.Zamestnanci.FirstOrDefaultAsync(z => z.Jmeno == userIdentifier);
-            }
-            if (zam == null)
-                return BadRequest("Pøihlášený uživatel nenalezen v DB.");
-
-            //OK parsování data rezervace 
-            DateTime datumRezervace;
-            if (string.IsNullOrEmpty(dto.date) || !DateTime.TryParse(dto.date, out datumRezervace))
-                datumRezervace = DateTime.Today;
-            else
-                datumRezervace = datumRezervace.Date;
-
-            //OK kontrola, zda místo není již zarezervované pro zvolený den — pøes IRezervaceBusiness
-            var alreadyBooked = await _rezervaceBusiness.IsMistoBookedAsync(misto.Id, datumRezervace);
-            if (alreadyBooked)
-                return BadRequest("Toto místo je již zarezervované pro zvolený den.");
-
-            //OK vytvoøit rezervaci
-            var rezervace = new Rezervace
-            {
-                MistoId = misto.Id,
-                Misto = misto,
-                ZamestnanecId = zam.Id,
-                Zamestnanec = zam,
-                DatumRezervace = datumRezervace
-            };
-
-            _db.Rezervace.Add(rezervace);
-            await _db.SaveChangesAsync();
-
-            // vrátit úspìch a informace o rezervaci
-            return Ok(new
-            {
-                success = true,
-                rezervaceId = rezervace.Id,
-                mistoId = misto.Id,
-                sekceId = sekce.Id,
-                date = datumRezervace.ToString("yyyy-MM-dd")
-            });
+            return Ok(new { success = true, rezervaceId = rezervace!.Id, mistoId = rezervace.MistoId, sekceId = rezervace.Misto?.Sekce?.Id, date = rezervace.DatumRezervace.ToString("yyyy-MM-dd") });
         }
     }
 }

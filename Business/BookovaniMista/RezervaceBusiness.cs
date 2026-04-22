@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Entities.BookovaniMista;
 using Entities.BookovaniMista.Models;
 using Business.BookovaniMista.Interfaces;
+using Business.BookovaniMista.Resources;
 
 namespace Business.BookovaniMista
 {
@@ -15,19 +16,29 @@ namespace Business.BookovaniMista
         public RezervaceBusiness(BookovaniMistaDbContext db) => _db = db;
 
         // Hlavní orchestrace rezervace — tenká vrstva, deleguje jednotlivé kroky do privátních metod
-        public async Task<(bool Success, string? Error, Rezervace? Rezervace)> RezervovatAsync(RezervaceDto dto, string userIdentifier, CancellationToken cancellationToken = default)
+        public async Task<BookingResultDto> RezervovatAsync(RezervaceDto dto, string userIdentifier, CancellationToken cancellationToken = default)
         {
             // validace DTO
             var dtoValidation = ValidateDto(dto);
             if (!dtoValidation.IsValid)
-                return (false, dtoValidation.Error, null);
+                return new BookingResultDto
+                {
+                    Success = false,
+                    ErrorType = BookingErrorType.ValidationFailed,
+                    ErrorMessage = dtoValidation.Error
+                };
 
             var sekceId = dto!.SekceId!.Value;
 
             // naèíst sekci
             var sekce = await GetSekceAsync(sekceId, cancellationToken);
             if (sekce == null)
-                return (false, "Sekce nenalezena.", null);
+                return new BookingResultDto
+                {
+                    Success = false,
+                    ErrorType = BookingErrorType.SectionNotFound,
+                    ErrorMessage = BookingErrorMessages.SectionNotFound
+                };
 
             // parsování èísla místa
             var seatIndex = ParseSeatIndex(dto);
@@ -35,12 +46,22 @@ namespace Business.BookovaniMista
             // najít místo
             var misto = await FindMistoAsync(sekceId, seatIndex, sekce, cancellationToken);
             if (misto == null)
-                return (false, "Místo nenalezeno pro zadanou sekci/èíslo.", null);
+                return new BookingResultDto
+                {
+                    Success = false,
+                    ErrorType = BookingErrorType.SeatNotFound,
+                    ErrorMessage = BookingErrorMessages.SeatNotFound
+                };
 
             // najít zamìstnance podle userIdentifier
             var zam = await FindZamestnanecAsync(userIdentifier, cancellationToken);
             if (zam == null)
-                return (false, "Pøihlášený uživatel nenalezen v DB.", null);
+                return new BookingResultDto
+                {
+                    Success = false,
+                    ErrorType = BookingErrorType.UserNotFound,
+                    ErrorMessage = BookingErrorMessages.UserNotFound
+                };
 
             // parsování data rezervace
             var datumRezervace = ParseDatumRezervace(dto.Date);
@@ -48,19 +69,39 @@ namespace Business.BookovaniMista
             // validace data rezervace (vèetnì rozsahu)
             var datumValidation = ValidateDatumRezervace(datumRezervace);
             if (!datumValidation.IsValid)
-                return (false, datumValidation.Error, null);
+                return new BookingResultDto
+                {
+                    Success = false,
+                    ErrorType = datumValidation.ErrorType,
+                    ErrorMessage = datumValidation.Error
+                };
 
             // kontrola kolize
             var booked = await IsMistoBookedAsync(misto.Id, datumRezervace, cancellationToken);
             if (booked)
-                return (false, "Místo již zarezervované pro zvolený den.", null);
+                return new BookingResultDto
+                {
+                    Success = false,
+                    ErrorType = BookingErrorType.SeatAlreadyBooked,
+                    ErrorMessage = BookingErrorMessages.SeatAlreadyBooked
+                };
 
             // vytvoøení rezervace a uložení
             var saved = await CreateRezervaceAsync(misto.Id, zam.Id, datumRezervace, cancellationToken);
             if (saved == null)
-                return (false, "Chyba pøi ukládání rezervace (možná kolize).", null);
+                return new BookingResultDto
+                {
+                    Success = false,
+                    ErrorType = BookingErrorType.DatabaseError,
+                    ErrorMessage = BookingErrorMessages.DatabaseError
+                };
 
-            return (true, null, saved);
+            return new BookingResultDto
+            {
+                Success = true,
+                ErrorType = BookingErrorType.None,
+                Rezervace = saved
+            };
         }
 
         // ---------- Privátní pomocné metody ----------
@@ -127,19 +168,19 @@ namespace Business.BookovaniMista
                 return DateTime.Today;
             return d.Date;
         }
-        private (bool IsValid, string? Error) ValidateDatumRezervace(DateTime datum)
+        private (bool IsValid, BookingErrorType ErrorType, string? Error) ValidateDatumRezervace(DateTime datum)
         {
             const int maxDaysInFuture = 365;
 
             // Check if date is in the past
             if (datum < DateTime.Today)
-                return (false, "Nelze zarezervovat místo v minulosti.");
+                return (false, BookingErrorType.DateInPast, BookingErrorMessages.DateInPast);
 
             // Check if date is too far in the future
             if (datum > DateTime.Today.AddDays(maxDaysInFuture))
-                return (false, $"Nelze zarezervovat místo více než {maxDaysInFuture} dní dopøedu.");
+                return (false, BookingErrorType.DateTooFar, string.Format(BookingErrorMessages.DateTooFarFuture, maxDaysInFuture));
 
-            return (true, null);
+            return (true, BookingErrorType.None, null);
         }
         private async Task<Rezervace?> CreateRezervaceAsync(int mistoId, int zamestnanecId, DateTime datum, CancellationToken ct)
         {

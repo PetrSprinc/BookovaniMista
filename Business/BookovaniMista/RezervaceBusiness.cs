@@ -22,7 +22,7 @@ namespace Business.BookovaniMista
             if (!dtoValidation.IsValid)
                 return (false, dtoValidation.Error, null);
 
-            var sekceId = dto!.sekceId!.Value;
+            var sekceId = dto!.SekceId!.Value;
 
             // naèíst sekci
             var sekce = await GetSekceAsync(sekceId, cancellationToken);
@@ -43,7 +43,12 @@ namespace Business.BookovaniMista
                 return (false, "Pøihlášený uživatel nenalezen v DB.", null);
 
             // parsování data rezervace
-            var datumRezervace = ParseDatumRezervace(dto.date);
+            var datumRezervace = ParseDatumRezervace(dto.Date);
+
+            // validace data rezervace (vèetnì rozsahu)
+            var datumValidation = ValidateDatumRezervace(datumRezervace);
+            if (!datumValidation.IsValid)
+                return (false, datumValidation.Error, null);
 
             // kontrola kolize
             var booked = await IsMistoBookedAsync(misto.Id, datumRezervace, cancellationToken);
@@ -67,7 +72,9 @@ namespace Business.BookovaniMista
         private (bool IsValid, string? Error) ValidateDto(RezervaceDto? dto)
         {
             if (dto == null) return (false, "Chybí data rezervace.");
-            if (dto.sekceId == null) return (false, "Chybí sekce (sekceId).");
+            if (dto.SekceId == null) return (false, "Chybí sekce (SekceId).");
+            if (string.IsNullOrEmpty(dto.SeatNumber)) return (false, "Chybí èíslo místa (SeatNumber).");
+            if (string.IsNullOrEmpty(dto.Date)) return (false, "Chybí datum rezervace (Date).");
             return (true, null);
         }
 
@@ -76,8 +83,8 @@ namespace Business.BookovaniMista
 
         private int ParseSeatIndex(RezervaceDto dto)
         {
-            if (string.IsNullOrEmpty(dto.seatNumber)) return 0;
-            return int.TryParse(dto.seatNumber, out var idx) ? idx : 0;
+            if (string.IsNullOrEmpty(dto.SeatNumber)) return 0;
+            return int.TryParse(dto.SeatNumber, out var idx) ? idx : 0;
         }
 
         private async Task<Misto?> FindMistoAsync(int sekceId, int seatIndex, Sekce? sekce, CancellationToken ct)
@@ -120,7 +127,20 @@ namespace Business.BookovaniMista
                 return DateTime.Today;
             return d.Date;
         }
+        private (bool IsValid, string? Error) ValidateDatumRezervace(DateTime datum)
+        {
+            const int maxDaysInFuture = 365;
 
+            // Check if date is in the past
+            if (datum < DateTime.Today)
+                return (false, "Nelze zarezervovat místo v minulosti.");
+
+            // Check if date is too far in the future
+            if (datum > DateTime.Today.AddDays(maxDaysInFuture))
+                return (false, $"Nelze zarezervovat místo více než {maxDaysInFuture} dní dopøedu.");
+
+            return (true, null);
+        }
         private async Task<Rezervace?> CreateRezervaceAsync(int mistoId, int zamestnanecId, DateTime datum, CancellationToken ct)
         {
             var misto = await _db.Mista.Include(m => m.Sekce).FirstOrDefaultAsync(m => m.Id == mistoId, ct);

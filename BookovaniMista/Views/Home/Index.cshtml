@@ -1,9 +1,6 @@
-﻿@model Entities.BookovaniMista.ViewModel
-
-@{
+﻿@{
     ViewData["Title"] = "Home Page";
 }
-
 <div class="text-center">
     <h1 class="display-4">Vítej člověče!</h1>
     <div class="d-grid gap-2 col-6 mx-auto">
@@ -13,78 +10,3 @@
         <a asp-controller="Zobrazeni" asp-action="Vytizenost" class="btn btn-primary">Vytíženost míst</a>
     </div>
 </div>
-
-<div class="mt-5">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Misto.Oznaceni</th>
-                <th>DatumRezervace</th>
-                <th>Zamestnanec.Jmeno</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var rezervace in Model.Rezervace)
-            {
-                <tr>
-                    <td>@rezervace.Id</td>
-                    <td>@rezervace.Misto.Oznaceni</td>
-                    <td>@rezervace.DatumRezervace</td>
-                    <td>@rezervace.Zamestnanec.Jmeno</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
-
-@* <div class="mt-5">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Označení sekce</th>
-                <th>Název sekce</th>
-                <th>Kapacita</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var sekce in Model.Sekce)
-            {
-                <tr>
-                    <td>@sekce.Id</td>
-                    <td>@sekce.Oznaceni</td>
-                    <td>@sekce.Nazev</td>
-                    <td>@sekce.Kapacita</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
- *@
-@* <div class="mt-5">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Označení místa</th>
-                <th>Název místa</th>
-                <th>SekceId</th>
-                <th>Sekce.Oznaceni</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var misto in Model.Mista)
-            {
-                <tr>
-                    <td>@misto.Id</td>
-                    <td>@misto.Oznaceni</td>
-                    <td>@misto.Nazev</td>
-                    <td>@misto.SekceId</td>
-                    <td>@misto.Sekce.Oznaceni</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
- *@

@@ -4,7 +4,14 @@ namespace Business.BookovaniMista.Interfaces
 {
     public interface IMapaBusiness
     {
-        Task<IHtmlContent> RenderMapCardAsync(DateTime date);
-        Task<IHtmlContent> RenderSectionOverlayAsync(int sekceDbId, string anchorId, string title, string subtitle, int total, int rows, DateTime date, string? currentUsername);
+        Task<IHtmlContent> RenderBookingForm(DateTime date);
+        
+        IHtmlContent RenderSectionOverlay(
+            int sekceDbId, string anchorId, string title, string subtitle, 
+            int total, int rows, DateTime date, string? currentUsername, 
+            Dictionary<int, string?> bookedIndices);
+
+        Task<Dictionary<int, Dictionary<int, string?>>> GetAllReservationsForDateAsync(
+            DateTime date, int[] sekceDbIds);
     }
 }

@@ -8,12 +8,20 @@
                               ?? User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
                               ?? User.Identity?.Name;
 }
+
 <h1>@ViewData["Title"]</h1>
 
-@* Přesunuto do business vrstvy, vykreslí mapu se zvoleným datem (výchozí dnes) *@
-@await Mapa.RenderMapCardAsync(DateTime.Today)
+@{
+    var bookingDateString = Context.Request.Query["bookingDate"].FirstOrDefault();
+    if (string.IsNullOrEmpty(bookingDateString) && Context.Request.HasFormContentType)
+        bookingDateString = Context.Request.Form["bookingDate"].FirstOrDefault();
+    bookingDateString ??= DateTime.Today.ToString("yyyy-MM-dd");
+    DateTime bookingDate = DateTime.TryParse(bookingDateString, out var parsedDate) ? parsedDate.Date : DateTime.Today;
+}
 
-<!-- Detailní panely pro každou sekci-->
+@await Mapa.RenderBookingForm(bookingDate)
+
+<!-- Detail panels for each section -->
 @{
     var sections = new[]
     {
@@ -27,11 +35,14 @@
         new { Id = "SS4", Db = 8, Title = "Sekce sever 4", Subtitle = "Jižní 4/5 — vizualizace míst", Total = 18, Rows = 3 },
         new { Id = "SS5", Db = 9, Title = "Sekce sever 5", Subtitle = "Jižní 5/5 — vizualizace míst", Total = 6, Rows = 3 }
     };
+
+    var sekceDbIds = sections.Select(s => s.Db).ToArray();
+    var allReservations = await Mapa.GetAllReservationsForDateAsync(bookingDate, sekceDbIds);
 }
 
 @foreach (var s in sections)
 {
-    @await Mapa.RenderSectionOverlayAsync(s.Db, s.Id, s.Title, s.Subtitle, s.Total, s.Rows, DateTime.Today, currentUsername)
+    @Mapa.RenderSectionOverlay(s.Db, s.Id, s.Title, s.Subtitle, s.Total, s.Rows, bookingDate, currentUsername, allReservations[s.Db])
 }
 
 @* Confirm dialog (HTML-only, CSS + JS below) *@
@@ -48,32 +59,133 @@
 
 @section Styles {
     <style>
-        /* SVG sekce */
-        .section { fill:#0d6efd22; stroke:#0d6efd; stroke-width:2; cursor:pointer; transition:fill .12s, transform .08s; }
-        a .section:hover { fill:#0d6efd55; transform: scale(1.01); }
-        .label { fill:#0d6efd; font-weight:700; font-size:24px; pointer-events:none; }
+        :root {
+            --z-overlay: 1050;
+            --z-confirm-dialog: 2000;
+        }
 
-        /* Overlay detailu (CSS-only: :target) */
-        .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:1050; padding:1rem; }
-        .overlay:target { display:flex; }
-        .detail { background:#fff; padding:1.25rem; border-radius:.5rem; max-width:760px; width:100%; box-shadow:0 8px 24px rgba(0,0,0,.2); position:relative; }
-        .detail .close { position:absolute; right:.5rem; top:.25rem; font-size:2rem; color:#666; text-decoration:none; line-height:1; }
-        .detail .muted { color:#6c757d; margin-top:-.25rem; margin-bottom:.75rem; }
+        .section {
+            fill: #0d6efd22;
+            stroke: #0d6efd;
+            stroke-width: 2;
+            cursor: pointer;
+            transition: fill .12s, transform .08s;
+        }
 
-        /* Grid míst - container display je definován inline, zde základní styly */
-        .seats-grid { margin-top:.75rem; }
-        .seat { min-height:48px; display:flex; align-items:center; justify-content:center; font-weight:600; border-radius:.375rem; padding:.5rem 0; }
+        a .section:hover {
+            fill: #0d6efd55;
+            transform: scale(1.01);
+        }
 
-        /* Stav míst: available / booked by other / booked by me */
-        .seat.available { background: #198754; color: #fff; border: none; } /* zelená */
-        .seat.booked-other { background: #dc3545; color: #fff; border: none; } /* červená */
-        .seat.booked-me { background: #0d6efd; color: #fff; border: none; } /* modrá */
+        .label {
+            fill: #0d6efd;
+            font-weight: 700;
+            font-size: 24px;
+            pointer-events: none;
+        }
 
-        /* Confirm dialog styles */
-        .confirm-overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); z-index:2000; }
-        .confirm-overlay[aria-hidden="true"] { display:none; }
-        .confirm-dialog { background:#fff; padding:1rem 1.25rem; border-radius:.5rem; width:320px; max-width:90%; box-shadow:0 12px 40px rgba(0,0,0,.25); }
-        .confirm-actions { display:flex; gap:.5rem; justify-content:flex-end; margin-top:1rem; }
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: var(--z-overlay);
+            padding: 1rem;
+        }
+
+            .overlay:target {
+                display: flex;
+            }
+
+        .detail {
+            background: #fff;
+            padding: 1.25rem;
+            border-radius: .5rem;
+            max-width: 760px;
+            width: 100%;
+            box-shadow: 0 8px 24px rgba(0,0,0,.2);
+            position: relative;
+        }
+
+            .detail .close {
+                position: absolute;
+                right: .5rem;
+                top: .25rem;
+                font-size: 2rem;
+                color: #666;
+                text-decoration: none;
+                line-height: 1;
+            }
+
+            .detail .muted {
+                color: #6c757d;
+                margin-top: -.25rem;
+                margin-bottom: .75rem;
+            }
+
+        .seats-grid {
+            margin-top: .75rem;
+        }
+
+        .seat {
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            border-radius: .375rem;
+            padding: .5rem 0;
+        }
+
+            .seat.available {
+                background: #198754;
+                color: #fff;
+                border: none;
+            }
+
+            .seat.booked-other {
+                background: #dc3545;
+                color: #fff;
+                border: none;
+            }
+
+            .seat.booked-me {
+                background: #0d6efd;
+                color: #fff;
+                border: none;
+            }
+
+        .confirm-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.45);
+            z-index: var(--z-confirm-dialog);
+        }
+
+            .confirm-overlay[aria-hidden="true"] {
+                display: none;
+            }
+
+        .confirm-dialog {
+            background: #fff;
+            padding: 1rem 1.25rem;
+            border-radius: .5rem;
+            width: 320px;
+            max-width: 90%;
+            box-shadow: 0 12px 40px rgba(0,0,0,.25);
+        }
+
+        .confirm-actions {
+            display: flex;
+            gap: .5rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
     </style>
 }
 
@@ -91,11 +203,15 @@
             return;
         }
 
-        // Delegovaná obsluha kliknutí na tlačítka míst
+        // Delegated click handling for seat buttons
         document.addEventListener('click', function (ev) {
             const target = ev.target;
             const btn = (target && typeof target.closest === 'function') ? target.closest('.seat') : null;
             if (!btn) return;
+
+            // Prevent handling clicks from within the confirm dialog
+            if (dialog && dialog.contains(btn)) return;
+
             if (btn.classList.contains('booked-other') || btn.disabled) return;
 
             ev.preventDefault();
@@ -145,9 +261,9 @@
 
                 // Sestavit payload pro server
                 const payload = {
-                    sekceId: sekceDb || null,
-                    seatNumber: seatNumber,
-                    date: selectedDate || null
+                    SekceId: sekceDb || null,
+                    SeatNumber: seatNumber,
+                    Date: selectedDate || null
                 };
 
                 // TODO Zkusit získat anti-forgery token pokud je přítomen na stránce
@@ -192,5 +308,15 @@
                 currentButton = null;
             }
         });
+
+        // Refresh page with new date
+        if (dateInput) {
+            dateInput.addEventListener('change', function () {
+                const selectedDate = this.value;
+                if (selectedDate) {
+                    window.location.href = '?bookingDate=' + encodeURIComponent(selectedDate);
+                }
+            });
+        }
     })();
 </script>

@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<BookovaniMistaDbContext>(options =>
-    options.UseInMemoryDatabase("BookovaniMistaDb")); //UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))); // UseInMemoryDatabase for testing purposes
+    options.UseInMemoryDatabase("BookovaniMistaDb"));
 
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
    .AddNegotiate();

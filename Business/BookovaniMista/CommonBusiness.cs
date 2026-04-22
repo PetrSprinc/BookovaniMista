@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using Entities.BookovaniMista;
 using Entities.BookovaniMista.Models;
 using Business.BookovaniMista.Interfaces;
@@ -39,14 +40,27 @@ namespace Business.BookovaniMista
                 var shortName = nameClaim.Contains('\\') ? nameClaim.Split('\\').Last() : nameClaim;
                 if (!string.IsNullOrWhiteSpace(shortName))
                 {
-                    var pattern = $"%{shortName}%";
+                    var escapedShortName = EscapeLikePattern(shortName);
+                    var pattern = $"%{escapedShortName}%";
                     var byShort = await _db.Zamestnanci
-                        .FirstOrDefaultAsync(z => z.Jmeno != null && EF.Functions.Like(z.Jmeno, pattern));
+                        .FirstOrDefaultAsync(z => z.Jmeno != null && EF.Functions.Like(z.Jmeno, pattern, "\\"));
                     if (byShort != null) return byShort;
                 }
             }
 
             return null;
+        }
+
+        private static string EscapeLikePattern(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            // Escape backslash first to avoid double-escaping
+            return input
+                .Replace("\\", "\\\\", StringComparison.Ordinal)
+                .Replace("%", "\\%", StringComparison.Ordinal)
+                .Replace("_", "\\_", StringComparison.Ordinal);
         }
 
         public async Task<VytizenostResult> GetVytizenostAsync(DateTime? odDatum, DateTime? doDatum)

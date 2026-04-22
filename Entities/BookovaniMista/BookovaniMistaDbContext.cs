@@ -38,6 +38,12 @@ namespace Entities.BookovaniMista
                 .HasForeignKey(r => r.ZamestnanecId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // UNIQUE Index: Prevent double-booking on same date
+            // No two reservations for the same seat (Misto) on the same date (DatumRezervace)
+            modelBuilder.Entity<Rezervace>()
+                .HasIndex(r => new { r.MistoId, r.DatumRezervace })
+                .IsUnique();
+
             base.OnModelCreating(modelBuilder);
         }
     }

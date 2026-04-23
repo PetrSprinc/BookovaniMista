@@ -1,0 +1,182 @@
+﻿:root {
+    --z-overlay: 1050;
+    --z-confirm-dialog: 2000;
+}
+
+/* SVG Section styles */
+.section {
+    fill: #0d6efd22;
+    stroke: #0d6efd;
+    stroke-width: 2;
+    cursor: pointer;
+    transition: fill .12s, transform .08s;
+}
+
+a .section:hover {
+    fill: #0d6efd55;
+    transform: scale(1.01);
+}
+
+.label {
+    fill: #0d6efd;
+    font-weight: 700;
+    font-size: 24px;
+    pointer-events: none;
+}
+
+/* Section detail overlay */
+.overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-overlay);
+    padding: 1rem;
+}
+
+.overlay:target {
+    display: flex;
+}
+
+.detail {
+    background: #fff;
+    padding: 1.25rem;
+    border-radius: .5rem;
+    max-width: 760px;
+    width: 100%;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .2);
+    position: relative;
+}
+
+.detail .close {
+    position: absolute;
+    right: .5rem;
+    top: .25rem;
+    font-size: 2rem;
+    color: #666;
+    text-decoration: none;
+    line-height: 1;
+}
+
+.detail .muted {
+    color: #6c757d;
+    margin-top: -.25rem;
+    margin-bottom: .75rem;
+}
+
+/* Seats grid */
+.seats-grid {
+    margin-top: .75rem;
+}
+
+.seat {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    border-radius: .375rem;
+    padding: .5rem 0;
+    cursor: pointer;
+    transition: background-color .15s ease, transform .1s ease;
+}
+
+.seat:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.seat.available {
+    background: #198754;
+    color: #fff;
+    border: none;
+}
+
+.seat.available:hover:not(:disabled) {
+    background: #157347;
+    transform: translateY(-2px);
+}
+
+.seat.booked-other {
+    background: #dc3545;
+    color: #fff;
+    border: none;
+    cursor: not-allowed;
+}
+
+.seat.booked-me {
+    background: #0d6efd;
+    color: #fff;
+    border: none;
+    cursor: not-allowed;
+}
+
+/* Confirmation dialog */
+.confirm-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: var(--z-confirm-dialog);
+    padding: 1rem;
+}
+
+.confirm-overlay[aria-hidden="true"] {
+    display: none;
+}
+
+.confirm-dialog {
+    background: #fff;
+    padding: 1rem 1.25rem;
+    border-radius: .5rem;
+    width: 320px;
+    max-width: 90%;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, .25);
+}
+
+.confirm-dialog h4 {
+    margin: 0 0 .75rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.confirm-dialog p {
+    margin: 0 0 1rem 0;
+    color: #333;
+}
+
+.confirm-actions {
+    display: flex;
+    gap: .5rem;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.confirm-actions .btn {
+    padding: .375rem .75rem;
+    font-size: .875rem;
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+    .detail {
+        padding: 1rem;
+    }
+
+    .seats-grid {
+        font-size: .875rem;
+    }
+
+    .seat {
+        min-height: 40px;
+        padding: .25rem 0;
+    }
+
+    .confirm-dialog {
+        width: 90%;
+    }
+}

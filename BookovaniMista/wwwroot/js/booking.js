@@ -11,6 +11,7 @@
     const yesBtn = document.getElementById('confirm-yes');
     const cancelBtn = document.getElementById('confirm-cancel');
     const dateInput = document.getElementById('booking-date');
+    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
     // Validate required elements
     if (!dialog || !messageEl) {
@@ -95,7 +96,9 @@
             };
 
             // Send booking request
-            const headers = { 'Content-Type': 'application/json' };
+            const headers = {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token };
             console.log('📡 Sending booking request...');
             fetch('/Akcni/Rezervovat', {
                 method: 'POST',

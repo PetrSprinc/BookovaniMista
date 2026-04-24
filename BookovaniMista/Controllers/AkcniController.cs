@@ -42,6 +42,7 @@ namespace BookovaniMista.Controllers
 
         // POST /Akcni/Rezervovat
         [HttpPost("Rezervovat")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Rezervovat([FromBody] RezervaceDto dto, CancellationToken ct)
         {
             try

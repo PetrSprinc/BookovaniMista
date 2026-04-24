@@ -1,7 +1,5 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Html;
 using Microsoft.EntityFrameworkCore;
@@ -11,161 +9,188 @@ using Business.BookovaniMista.Models;
 
 namespace Business.BookovaniMista
 {
+    /// <summary>
+    /// Business logic for map rendering and booking management
+    /// Uses String.Join + LINQ instead of StringBuilder for cleaner, more readable HTML generation
+    /// </summary>
     public class MapaBusiness : IMapaBusiness
     {
         private readonly BookovaniMistaDbContext _db;
 
         private const string MistoNumberSeparator = "-M";
 
-        public MapaBusiness(BookovaniMistaDbContext db) => _db = db;
+        public MapaBusiness(BookovaniMistaDbContext db)
+        {
+            _db = db ?? throw new ArgumentNullException(nameof(db));
+        }
 
-        public Task<IHtmlContent> RenderBookingForm(DateTime date) 
+        /// <summary>
+        /// Render booking form with date picker and interactive SVG map
+        /// Uses String.Join + String Interpolation instead of StringBuilder
+        /// </summary>
+        public Task<IHtmlContent> RenderBookingForm(DateTime date)
         {
             var today = date.ToString("yyyy-MM-dd");
             const int maxDaysInFuture = 365;
             var maxDate = date.AddDays(maxDaysInFuture).ToString("yyyy-MM-dd");
-            var sb = new StringBuilder();
 
-            sb.Append("<div class=\"card mb-4\">");
-            sb.Append("<div class=\"card-body\">");
-            sb.Append("<p>Klikněte na sekci mapy pro zobrazení detailu.</p>");
+            // Generate section elements using String.Join + LINQ
+            var sectionRects = string.Join("\n", 
+                MapConfiguration.Sekce.Select(s => $@"
+        <a href=""#{WebUtility.HtmlEncode(s.AnchorId)}"" class=""section-link"" data-sekce-db=""{s.Id}"">
+            <rect x=""{s.X}"" y=""{s.Y}"" width=""{s.Width}"" height=""{s.Height}"" 
+                  class=""section"" data-id=""{s.Id}"" />
+        </a>"));
 
-            sb.Append("<div class=\"mb-3\" style=\"max-width:260px;\">");
-            sb.Append("<label for=\"booking-date\" class=\"form-label\">Vyberte den rezervace</label>");
-            sb.Append($"<input id=\"booking-date\" name=\"bookingDate\" type=\"date\" class=\"form-control\" value=\"{WebUtility.HtmlEncode(today)}\" min=\"{WebUtility.HtmlEncode(today)}\" max=\"{WebUtility.HtmlEncode(maxDate)}\" required />");
-            sb.Append("<div class=\"form-text\">Vybraný den bude odeslán spolu se žádostí o zabookování.</div>");
-            sb.Append("</div>");
+            var sectionLabels = string.Join("\n", 
+                MapConfiguration.Sekce.Select(s => $@"
+        <text x=""{s.LabelX}"" y=""{s.LabelY}"" text-anchor=""middle"" class=""label"">{WebUtility.HtmlEncode(s.Nazev)}</text>"));
 
-            sb.Append("<div class=\"ratio ratio-16x9\">");
-            sb.Append($"<svg viewBox=\"{MapConfiguration.SvgViewBox}\" xmlns=\"{MapConfiguration.SvgNamespace}\" style=\"width:100%;height:100%;\">");
+            // Build complete HTML using String Interpolation
+            var html = $@"
+<div class=""card mb-4"">
+    <div class=""card-body"">
+        <p>Klikněte na sekci mapy pro zobrazení detailu.</p>
 
-            // Renderovat všechny sekce z konfigurace
-            foreach (var sekce in MapConfiguration.Sekce)
-            {
-                // Obdélník sekce
-                sb.Append($"<a href=\"#{WebUtility.HtmlEncode(sekce.AnchorId)}\">");
-                sb.Append($"<rect x=\"{sekce.X}\" y=\"{sekce.Y}\" width=\"{sekce.Width}\" height=\"{sekce.Height}\" class=\"section\" data-id=\"{sekce.Id}\" />");
-                sb.Append("</a>");
-            }
+        <div class=""mb-3"" style=""max-width:260px;"">
+            <label for=""booking-date"" class=""form-label"">Vyberte den rezervace</label>
+            <input id=""booking-date"" name=""bookingDate"" type=""date"" class=""form-control""
+                   value=""{WebUtility.HtmlEncode(today)}"" 
+                   min=""{WebUtility.HtmlEncode(today)}"" 
+                   max=""{WebUtility.HtmlEncode(maxDate)}"" 
+                   required />
+            <div class=""form-text"">Vybraný den bude odeslán spolu se žádostí o zabookování.</div>
+        </div>
 
-            // Štítky sekcí
-            foreach (var sekce in MapConfiguration.Sekce)
-            {
-                sb.Append($"<a href=\"#{WebUtility.HtmlEncode(sekce.AnchorId)}\">");
-                sb.Append($"<text x=\"{sekce.LabelX}\" y=\"{sekce.LabelY}\" text-anchor=\"middle\" class=\"label\">{WebUtility.HtmlEncode(sekce.Nazev)}</text>");
-                sb.Append("</a>");
-            }
+        <div class=""ratio ratio-16x9"">
+            <svg viewBox=""{MapConfiguration.SvgViewBox}"" 
+                 xmlns=""{MapConfiguration.SvgNamespace}"" 
+                 style=""width:100%;height:100%;"">
+                {sectionRects}
+                {sectionLabels}
+            </svg>
+        </div>
+    </div>
+</div>";
 
-            sb.Append("</svg>");
-            sb.Append("</div>"); // ratio
-            sb.Append("</div>"); // card-body
-            sb.Append("</div>"); // card
-
-            return Task.FromResult<IHtmlContent>(new HtmlString(sb.ToString()));
+            return Task.FromResult<IHtmlContent>(new HtmlString(html));
         }
 
         /// <summary>
-        /// Renderuje HTML overlay sekce se seznamem míst (synchronní – pouze string building).
-        /// Data o rezervacích musí být již předpočítána a předána jako parametr.
+        /// Render section overlay with all seats
+        /// Uses String.Join + LINQ for seat button generation
         /// </summary>
         public IHtmlContent RenderSectionOverlay(
-            int sekceDbId, string anchorId, string title, string subtitle, 
-            int total, int rows, DateTime date, string? currentUsername, 
+            int sekceDbId, string anchorId, string title, string subtitle,
+            int total, int rows, DateTime date, string? currentUsername,
             Dictionary<int, string?> bookedIndices)
         {
-            if (string.IsNullOrEmpty(anchorId)) 
+            if (string.IsNullOrEmpty(anchorId))
                 throw new ArgumentException("anchorId is required", nameof(anchorId));
             if (rows <= 0) rows = 1;
 
-            var cols = (int)Math.Ceiling(total / (double)rows);
-            var sb = new StringBuilder();
+            // Generate seat buttons using String.Join + LINQ
+            var seatsButtons = GenerateSeatsButtons(total, rows, currentUsername, bookedIndices);
 
-            sb.Append($"<div id=\"{WebUtility.HtmlEncode(anchorId)}\" class=\"overlay\" aria-hidden=\"true\" data-sekce-db=\"{sekceDbId}\">");
-            
-            sb.Append("<div class=\"detail\">");
-            sb.Append("<a class=\"close\" href=\"#\" aria-label=\"Zavřít\">&times;</a>");
-            sb.Append($"<h3>{WebUtility.HtmlEncode(title)}</h3>");
-            sb.Append($"<p class=\"muted\">{WebUtility.HtmlEncode(subtitle)}</p>");
-            sb.Append("<div class=\"seats-grid\">");
-            sb.Append($"<div style=\"display:grid; grid-template-columns:repeat({cols}, 1fr); gap:.5rem;\">");
+            var html = $@"
+<div id=""{WebUtility.HtmlEncode(anchorId)}"" class=""overlay"" aria-hidden=""true"" data-sekce-db=""{sekceDbId}"">
+    <div class=""detail"">
+        <a class=""close"" href=""#"" aria-label=""Zavřít"">&times;</a>
+        <h3>{WebUtility.HtmlEncode(title)}</h3>
+        <p class=""muted"">{WebUtility.HtmlEncode(subtitle)}</p>
+        {seatsButtons}
+    </div>
+</div>";
 
-            for (int r = 0; r < rows; r++)
-            {
-                for (int c = 0; c < cols; c++)
-                {
-                    var idx = r * cols + c + 1;
-                    if (idx <= total)
-                    {
-                        if (bookedIndices.TryGetValue(idx, out var reservujiciJmeno) && !string.IsNullOrEmpty(reservujiciJmeno))
-                        {
-                            // rezervováno
-                            if (!string.IsNullOrEmpty(currentUsername) && string.Equals(reservujiciJmeno, currentUsername, StringComparison.OrdinalIgnoreCase))
-                            {
-                                sb.Append($"<button type=\"button\" class=\"btn seat booked-me\" data-seat=\"{idx}\" disabled>{idx}</button>");
-                            }
-                            else
-                            {
-                                // Obsazeno jiným -> červená
-                                sb.Append($"<button type=\"button\" class=\"btn seat booked-other\" data-seat=\"{idx}\" disabled>{idx}</button>");
-                            }
-                        }
-                        else
-                        {
-                            // Volné -> zelené
-                            sb.Append($"<button type=\"button\" class=\"btn seat available\" data-seat=\"{idx}\">{idx}</button>");
-                        }
-                    }
-                }
-            }
-
-            sb.Append("</div>"); // inner grid
-            sb.Append("</div>"); // seats-grid
-            sb.Append("</div>"); // detail
-            sb.Append("</div>"); // overlay
-
-            return new HtmlString(sb.ToString());
+            return new HtmlString(html);
         }
 
-        public Task<Dictionary<int, Dictionary<int, string?>>> GetAllBookingsForDateAsync(DateTime date, int[] sekceDbIds)
+        /// <summary>
+        /// Render only the seats grid (for lazy loading / AJAX requests)
+        /// </summary>
+        public IHtmlContent RenderSeatsGrid(
+            int sekceDbId, string title, int total, int rows,
+            DateTime date, string? currentUsername, Dictionary<int, string?> bookedIndices)
         {
-            return GetAllReservationsForDateAsync(date, sekceDbIds);
+            return new HtmlString(GenerateSeatsButtons(total, rows, currentUsername, bookedIndices));
         }
 
+        /// <summary>
+        /// Generate seats grid HTML using String.Join + LINQ (shared helper)
+        /// This is the key method demonstrating String.Join + LINQ approach
+        /// </summary>
+        private string GenerateSeatsButtons(
+            int total, int rows, string? currentUsername, Dictionary<int, string?> bookedIndices)
+        {
+            if (rows <= 0) rows = 1;
+            var cols = (int)Math.Ceiling(total / (double)rows);
+
+            // Generate all seat buttons using LINQ
+            var seatButtons = Enumerable.Range(1, total)
+                .Select(seatIndex =>
+                {
+                    bool isBooked = bookedIndices.TryGetValue(seatIndex, out var bookedByUser) && !string.IsNullOrEmpty(bookedByUser);
+
+                    if (isBooked)
+                    {
+                        bool isBookedByMe = !string.IsNullOrEmpty(currentUsername) &&
+                                           string.Equals(bookedByUser, currentUsername, StringComparison.OrdinalIgnoreCase);
+
+                        var cssClass = isBookedByMe ? "booked-me" : "booked-other";
+                        return $"<button type=\"button\" class=\"btn seat {cssClass}\" data-seat=\"{seatIndex}\" disabled>{seatIndex}</button>";
+                    }
+                    else
+                    {
+                        return $"<button type=\"button\" class=\"btn seat available\" data-seat=\"{seatIndex}\">{seatIndex}</button>";
+                    }
+                });
+
+            // Use String.Join to combine all buttons
+            var seatsGridContent = string.Join("\n", seatButtons);
+
+            // Wrap in grid container using String Interpolation
+            return $@"
+<div class=""seats-grid"">
+    <div style=""display:grid; grid-template-columns:repeat({cols}, 1fr); gap:.5rem;"">
+        {seatsGridContent}
+    </div>
+</div>";
+        }
+
+        /// <summary>
+        /// Get all reservations for specified sections on a given date
+        /// Returns dictionary: sectionId -> (seatIndex -> bookedByUserName)
+        /// </summary>
         public async Task<Dictionary<int, Dictionary<int, string?>>> GetAllReservationsForDateAsync(
-            DateTime date, int[] seckeIds)
+            DateTime date, int[] sekceDbIds)
         {
             var d = date.Date;
 
-            // Jeden dotaz pro všechny sekce najednou
             var rezervace = await (from r in _db.Rezervace
                                    join m in _db.Mista on r.MistoId equals m.Id
                                    join z in _db.Zamestnanci on r.ZamestnanecId equals z.Id
-                                   where r.DatumRezervace >= d && 
-                                         r.DatumRezervace < d.AddDays(1) && 
-                                         seckeIds.Contains(m.SekceId)
-                                   select new 
-                                   { 
-                                       m.SekceId, 
-                                       m.Oznaceni, 
-                                       m.Id, 
-                                       ReservujiciJmeno = z.Jmeno 
+                                   where r.DatumRezervace >= d &&
+                                         r.DatumRezervace < d.AddDays(1) &&
+                                         sekceDbIds.Contains(m.SekceId)
+                                   select new
+                                   {
+                                       m.SekceId,
+                                       m.Oznaceni,
+                                       m.Id,
+                                       ReservujiciJmeno = z.Jmeno
                                    }).ToListAsync();
 
-            // Organizovat data podle sekceId -> bookedIndices
-            var result = new Dictionary<int, Dictionary<int, string?>>();
-
-            foreach (var sekceId in seckeIds)
-            {
-                result[sekceId] = new Dictionary<int, string?>();
-            }
+            // Organize data by sectionId -> bookedIndices using LINQ ToDictionary
+            var result = sekceDbIds.ToDictionary(
+                sekceId => sekceId,
+                sekceId => new Dictionary<int, string?>()
+            );
 
             foreach (var item in rezervace)
             {
-                if (string.IsNullOrEmpty(item.Oznaceni)) continue;
-                
                 var pos = item.Oznaceni.LastIndexOf(MistoNumberSeparator, StringComparison.OrdinalIgnoreCase);
                 if (pos < 0) continue;
-                
+
                 var suffix = item.Oznaceni.Substring(pos + MistoNumberSeparator.Length);
                 if (int.TryParse(suffix, out var idx) && idx > 0)
                 {
@@ -177,6 +202,28 @@ namespace Business.BookovaniMista
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Render confirmation dialog for booking
+        /// Uses String Interpolation for clean HTML generation
+        /// </summary>
+        public IHtmlContent RenderConfirmDialog()
+        {
+            var html = $@"
+<!-- ✅ Confirmation Dialog (generated via RenderConfirmDialog) -->
+<div id=""confirm-dialog"" class=""confirm-overlay"" aria-hidden=""true"">
+    <div class=""confirm-dialog"" role=""dialog"" aria-modal=""true"" aria-labelledby=""confirm-title"">
+        <h4 id=""confirm-title"">Potvrzení</h4>
+        <p id=""confirm-message"">Opravdu chcete zabookovat vybrané místo?</p>
+        <div class=""confirm-actions"">
+            <button type=""button"" id=""confirm-yes"" class=""btn btn-primary"">Ano</button>
+            <button type=""button"" id=""confirm-cancel"" class=""btn btn-secondary"">Zrušit</button>
+        </div>
+    </div>
+</div>";
+
+            return new HtmlString(html);
         }
     }
 }

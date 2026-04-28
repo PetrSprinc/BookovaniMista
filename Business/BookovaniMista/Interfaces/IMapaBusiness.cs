@@ -18,11 +18,6 @@ namespace Business.BookovaniMista.Interfaces
             int sekceDbId, string title, int total, int rows,
             DateTime date, string? currentUsername, Dictionary<int, string?> bookedIndices);
 
-        /// <summary>
-        /// Render confirmation dialog for booking
-        /// </summary>
-        IHtmlContent RenderConfirmDialog();
-
         Task<Dictionary<int, Dictionary<int, string?>>> GetAllReservationsForDateAsync(
             DateTime date, int[] sekceDbIds);
     }

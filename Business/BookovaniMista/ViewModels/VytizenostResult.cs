@@ -1,4 +1,4 @@
-namespace Entities.BookovaniMista.ViewModels
+namespace Business.BookovaniMista.ViewModels
 {
     public class VytizenostResult
     {

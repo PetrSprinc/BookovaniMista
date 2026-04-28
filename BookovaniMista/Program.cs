@@ -6,7 +6,9 @@ using Business.BookovaniMista.Interfaces;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews().AddRazorOptions(options => {
+        options.ViewLocationFormats.Add("/Views/PartialViews/{0}.cshtml");
+    });
 
 builder.Services.AddDbContext<BookovaniMistaDbContext>(options =>
     options.UseInMemoryDatabase("BookovaniMistaDb"));

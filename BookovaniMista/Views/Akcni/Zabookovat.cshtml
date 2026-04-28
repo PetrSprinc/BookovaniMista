@@ -3,7 +3,8 @@
 @inject IMapaBusiness Mapa
 @{
     ViewData["Title"] = "Zabookovat místo";
-    // preferuj hodnotu předanou z controlleru, fallback na claim / identity
+
+    // Get current username
     string? currentUsername = ViewData["CurrentUsername"] as string
                               ?? User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
                               ?? User.Identity?.Name;
@@ -11,20 +12,15 @@
 
 <h1>@ViewData["Title"]</h1>
 
-@Html.AntiForgeryToken()
-
 @{
+    // Parse booking date from query string or form
     var bookingDateString = Context.Request.Query["bookingDate"].FirstOrDefault();
     if (string.IsNullOrEmpty(bookingDateString) && Context.Request.HasFormContentType)
         bookingDateString = Context.Request.Form["bookingDate"].FirstOrDefault();
     bookingDateString ??= DateTime.Today.ToString("yyyy-MM-dd");
     DateTime bookingDate = DateTime.TryParse(bookingDateString, out var parsedDate) ? parsedDate.Date : DateTime.Today;
-}
 
-@await Mapa.RenderBookingForm(bookingDate)
-
-<!-- Detail panels for each section -->
-@{
+    // Section definitions
     var sections = new[]
     {
         new { Id = "SJ1", Db = 1, Title = "Sekce jih 1", Subtitle = "Severní levá sekce — vizualizace míst", Total = 15, Rows = 3 },
@@ -42,13 +38,30 @@
     var allReservations = await Mapa.GetAllReservationsForDateAsync(bookingDate, sekceDbIds);
 }
 
+<!-- ✅ Booking Form PartialView -->
+@await Html.PartialAsync("_BookingForm", new { Date = bookingDate })
+
+<!-- ✅ Section Overlays PartialViews -->
 @foreach (var s in sections)
 {
-    @Mapa.RenderSectionOverlay(s.Db, s.Id, s.Title, s.Subtitle, s.Total, s.Rows, bookingDate, currentUsername, allReservations[s.Db])
+    @await Html.PartialAsync("_SectionOverlay", new
+    {
+        SekceDbId = s.Db,
+        AnchorId = s.Id,
+        Title = s.Title,
+        Subtitle = s.Subtitle,
+        Total = s.Total,
+        Rows = s.Rows,
+        CurrentUsername = currentUsername,
+        BookedIndices = allReservations[s.Db]
+    })
 }
 
-@* ✅ Confirmation Dialog (generated via Mapa.RenderConfirmDialog()) *@
-@Html.Raw(Mapa.RenderConfirmDialog())
+<!-- ✅ Confirmation Dialog PartialView -->
+@await Html.PartialAsync("_ConfirmDialog")
+
+<!-- ✅ CSRF Token Protection -->
+@Html.AntiForgeryToken()
 
 @section Scripts {
     <script src="~/js/booking.js"></script>

@@ -1,0 +1,61 @@
+@model dynamic
+
+@{
+    // Model properties:
+    // int SekceDbId
+    // string AnchorId
+    // string Title
+    // string Subtitle
+    // int Total
+    // int Rows
+    // string CurrentUsername
+    // Dictionary<int, string?> BookedIndices
+
+    var sekceDbId = Model.SekceDbId;
+    var anchorId = Model.AnchorId;
+    var title = Model.Title;
+    var subtitle = Model.Subtitle;
+    var total = Model.Total;
+    var rows = Model.Rows;
+    var currentUsername = Model.CurrentUsername;
+    var bookedIndices = (Dictionary<int, string?>)Model.BookedIndices;
+
+    if (rows <= 0) rows = 1;
+    var cols = (int)Math.Ceiling(total / (double)rows);
+}
+
+<!-- ? Section Overlay PartialView -->
+<div id="@anchorId" class="overlay" aria-hidden="true" data-sekce-db="@sekceDbId" data-section-title="@title">
+    <div class="detail">
+        <a class="close" href="#" aria-label="Zavøít">&times;</a>
+        <h3>@title</h3>
+        <p class="muted">@subtitle</p>
+
+        <div class="seats-grid">
+            <div style="display:grid; grid-template-columns:repeat(@cols, 1fr); gap:.5rem;">
+                @for (int i = 1; i <= total; i++)
+                {
+                    var seatIndex = i;
+                    var isBooked = bookedIndices.TryGetValue(seatIndex, out var bookedByUser) && !string.IsNullOrEmpty(bookedByUser);
+
+                    if (isBooked)
+                    {
+                        var isMine = !string.IsNullOrEmpty(currentUsername) &&
+                                    string.Equals(bookedByUser, currentUsername, StringComparison.OrdinalIgnoreCase);
+                        var cssClass = isMine ? "booked-me" : "booked-other";
+
+                        <button type="button" class="btn seat @cssClass" data-seat="@seatIndex" disabled>
+                            @seatIndex
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn seat available" data-seat="@seatIndex">
+                            @seatIndex
+                        </button>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using Entities.BookovaniMista;
 using Entities.BookovaniMista.Models;
 using Business.BookovaniMista.Interfaces;
-using Entities.BookovaniMista.ViewModels;
+using Business.BookovaniMista.ViewModels;
 
 namespace Business.BookovaniMista
 {

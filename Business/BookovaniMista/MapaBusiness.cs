@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Html;
 using Microsoft.EntityFrameworkCore;
 using Entities.BookovaniMista;
 using Business.BookovaniMista.Interfaces;
-using Business.BookovaniMista.Models;
+using Business.BookovaniMista.Resources;
 
 namespace Business.BookovaniMista
 {
@@ -202,28 +202,6 @@ namespace Business.BookovaniMista
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Render confirmation dialog for booking
-        /// Uses String Interpolation for clean HTML generation
-        /// </summary>
-        public IHtmlContent RenderConfirmDialog()
-        {
-            var html = $@"
-<!-- ✅ Confirmation Dialog (generated via RenderConfirmDialog) -->
-<div id=""confirm-dialog"" class=""confirm-overlay"" aria-hidden=""true"">
-    <div class=""confirm-dialog"" role=""dialog"" aria-modal=""true"" aria-labelledby=""confirm-title"">
-        <h4 id=""confirm-title"">Potvrzení</h4>
-        <p id=""confirm-message"">Opravdu chcete zabookovat vybrané místo?</p>
-        <div class=""confirm-actions"">
-            <button type=""button"" id=""confirm-yes"" class=""btn btn-primary"">Ano</button>
-            <button type=""button"" id=""confirm-cancel"" class=""btn btn-secondary"">Zrušit</button>
-        </div>
-    </div>
-</div>";
-
-            return new HtmlString(html);
         }
     }
 }

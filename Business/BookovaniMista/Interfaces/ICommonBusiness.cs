@@ -1,6 +1,6 @@
 using Entities.BookovaniMista.Models;
 using System.Security.Claims;
-using Entities.BookovaniMista.ViewModels;
+using Business.BookovaniMista.ViewModels;
 
 namespace Business.BookovaniMista.Interfaces
 {

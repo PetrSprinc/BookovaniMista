@@ -1,0 +1,52 @@
+@model dynamic
+
+@{
+    // Model by mìl obsahovat:
+    // DateTime date, nebo lze vzít z ViewData
+    var bookingDate = Model?.Date ?? (DateTime)ViewData["BookingDate"]!;
+    var today = bookingDate.ToString("yyyy-MM-dd");
+    const int maxDaysInFuture = 365;
+    var maxDate = bookingDate.AddDays(maxDaysInFuture).ToString("yyyy-MM-dd");
+}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <p>Kliknìte na sekci mapy pro zobrazení detailu.</p>
+
+        <div class="mb-3" style="max-width:260px;">
+            <label for="booking-date" class="form-label">Vyberte den rezervace</label>
+            <input id="booking-date" name="bookingDate" type="date" class="form-control"
+                   value="@today"
+                   min="@today"
+                   max="@maxDate"
+                   required />
+            <div class="form-text">Vybraný den bude odeslán spolu se žádostí o zabookování.</div>
+        </div>
+
+        <div class="ratio ratio-16x9">
+            <svg viewBox="@MapConfiguration.SvgViewBox"
+                 xmlns="@MapConfiguration.SvgNamespace"
+                 style="width:100%;height:100%;">
+
+                <!-- Section rectangles -->
+                @foreach (var s in MapConfiguration.Sekce)
+                {
+                    <a href="#@s.AnchorId" class="section-link" data-sekce-db="@s.Id">
+                        <rect x="@s.X" y="@s.Y" width="@s.Width" height="@s.Height"
+                              class="section" data-id="@s.Id" />
+                    </a>
+                }
+
+                <!-- Section labels -->
+                @foreach (var s in MapConfiguration.Sekce)
+                {
+                    <g>
+                        <text x="@s.LabelX" y="@s.LabelY" text-anchor="middle" class="label">
+                            @s.Nazev
+                        </text>
+                    </g>
+                }
+            </svg>
+        </div>
+    </div>
+</div>

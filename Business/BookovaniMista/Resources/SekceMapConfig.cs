@@ -1,4 +1,4 @@
-namespace Business.BookovaniMista.Models
+namespace Business.BookovaniMista.Resources
 {
     /// <summary>
     /// Konfigurace pozic sekcí na mapì SVG.

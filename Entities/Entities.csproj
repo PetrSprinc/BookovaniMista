@@ -12,4 +12,8 @@
     <PackageReference Include="Microsoft.Graph" Version="5.103.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="BookovaniMista\ViewModels\" />
+  </ItemGroup>
+
 </Project>

@@ -2,7 +2,7 @@ using Entities.BookovaniMista;
 using Entities.BookovaniMista.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Entities.BookovaniMista.ViewModels;
+using Business.BookovaniMista.ViewModels;
 using Business.BookovaniMista.Interfaces;
 
 namespace BookovaniMista.Controllers

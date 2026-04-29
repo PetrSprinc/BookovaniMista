@@ -24,6 +24,12 @@ a .section:hover {
     pointer-events: none;
 }
 
+.label-line {
+    font-size: 14px;
+    font-weight: 600;
+    fill: #0d6efd;
+}
+
 /* Section detail overlay */
 .overlay {
     display: none;

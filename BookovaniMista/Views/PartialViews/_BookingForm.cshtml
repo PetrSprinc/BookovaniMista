@@ -1,12 +1,48 @@
 @model dynamic
 
 @{
-    // Model by mìl obsahovat:
-    // DateTime date, nebo lze vzít z ViewData
+    // DateTime date
     var bookingDate = Model?.Date ?? (DateTime)ViewData["BookingDate"]!;
     var today = bookingDate.ToString("yyyy-MM-dd");
     const int maxDaysInFuture = 365;
     var maxDate = bookingDate.AddDays(maxDaysInFuture).ToString("yyyy-MM-dd");
+
+    // Sekce z Model
+    dynamic[] allSections = Model?.Sections ?? Array.Empty<dynamic>();
+
+    // Dynamicky naèti øádky podle konfigurací
+    var rows = new Dictionary<int, (int id, int seats)[]>();
+    foreach (var (prefix, yPosition) in MapConfiguration.RowConfigurations)
+    {
+        var rowSections = allSections
+            .Where(s => ((string)s.Id).StartsWith(prefix))
+            .Select(s => (id: (int)s.Db, seats: (int)s.Total))
+            .ToArray();
+
+        if (rowSections.Length > 0)
+        {
+            rows[MapConfiguration.RowConfigurations.ToList().IndexOf((prefix, yPosition))] = rowSections;
+        }
+    }
+
+    // Výpoèet pozic pro všechny øádky
+    var allRowsData = new Dictionary<int, List<(int Id, int X, int Y, int Width, int Height)>>();
+    for (int i = 0; i < MapConfiguration.RowConfigurations.Length; i++)
+    {
+        if (rows.ContainsKey(i))
+        {
+            var (prefix, yPosition) = MapConfiguration.RowConfigurations[i];
+            var rowSectionsData = CalculateRowPositions(rows[i],
+                MapConfiguration.SvgViewBoxWidth,
+                MapConfiguration.SvgMarginX,
+                yPosition,
+                MapConfiguration.SvgRowHeight);
+            allRowsData[i] = rowSectionsData;
+        }
+    }
+
+    // Sluèit všechny øádky do jednoho seznamu
+    var allRowData = allRowsData.Values.SelectMany(x => x).ToList();
 }
 
 <div class="card mb-4">
@@ -28,25 +64,131 @@
                  xmlns="@MapConfiguration.SvgNamespace"
                  style="width:100%;height:100%;">
 
-                <!-- Section rectangles -->
-                @foreach (var s in MapConfiguration.Sekce)
+                <!-- Dynamicky generované sekce -->
+                @foreach (var item in allRowData)
                 {
-                    <a href="#@s.AnchorId" class="section-link" data-sekce-db="@s.Id">
-                        <rect x="@s.X" y="@s.Y" width="@s.Width" height="@s.Height"
-                              class="section" data-id="@s.Id" />
-                    </a>
+                    var sekce = MapConfiguration.Sekce.FirstOrDefault(s => s.Id == item.Id);
+                    if (sekce != null)
+                    {
+                        <a href="#@sekce.AnchorId" class="section-link" data-sekce-db="@sekce.Id">
+                            <rect x="@item.X" y="@item.Y" width="@item.Width" height="@item.Height"
+                                  class="section" data-id="@sekce.Id" />
+                        </a>
+                    }
                 }
 
-                <!-- Section labels -->
-                @foreach (var s in MapConfiguration.Sekce)
+                <!-- Labely sekcí -->
+                @foreach (var item in allRowData)
                 {
-                    <g>
-                        <text x="@s.LabelX" y="@s.LabelY" text-anchor="middle" class="label">
-                            @s.Nazev
-                        </text>
-                    </g>
+                    var sekce = MapConfiguration.Sekce.FirstOrDefault(s => s.Id == item.Id);
+                    if (sekce != null)
+                    {
+                        var labelX = item.X + (item.Width / 2);
+                        var labelY = item.Y + (item.Height / 2) - 10;
+
+                        // Rozhodni, zda je potøeba více øádkù
+                        var shouldWrap = ShouldWrapText(sekce.Nazev, item.Width);
+                        var lines = shouldWrap ? SplitTextOptimally(sekce.Nazev, item.Width) : new[] { sekce.Nazev };
+
+                        <g>
+                            <text x="@labelX" y="@labelY" text-anchor="middle" class="label" dominant-baseline="middle">
+                                @for (int i = 0; i < lines.Length; i++)
+                                {
+                                    var dyOffset = i == 0 ? "0" : "1.2em";
+                                    var cssClass = shouldWrap ? "label-line" : "label";
+                                    <tspan x="@labelX" dy="@dyOffset" class="@cssClass">@lines[i]</tspan>
+                                }
+                            </text>
+                        </g>
+                    }
                 }
             </svg>
         </div>
     </div>
 </div>
+
+@functions
+{
+    // Výpoèet pozic a šíøek sekcí pro øádek
+    private List<(int Id, int X, int Y, int Width, int Height)> CalculateRowPositions(
+        (int id, int seats)[] sections, int totalWidth, int startX, int y, int height)
+    {
+        var result = new List<(int Id, int X, int Y, int Width, int Height)>();
+        var totalSeats = sections.Sum(s => s.seats);
+
+        // Vymezená šíøka pro sekce (bez okrajù a paddingu)
+        const int marginLeft = 20;
+        const int marginRight = 20;
+        const int sectionPadding = 3;  // Malá mezera mezi sekcemi
+
+        var totalPadding = (sections.Length - 1) * sectionPadding;
+        var availableWidth = totalWidth - marginLeft - marginRight - totalPadding;
+
+        var currentX = startX + marginLeft;
+
+        foreach (var (id, seats) in sections)
+        {
+            // Šíøka sekce pomìrovì k poètu míst
+            var sectionWidth = (int)Math.Round(availableWidth * (double)seats / totalSeats);
+
+            result.Add((Id: id, X: currentX, Y: y, Width: sectionWidth, Height: height));
+            currentX += sectionWidth + sectionPadding;  // Pøidej padding pro pøíští sekci
+        }
+
+        return result;
+    }
+
+    // Rozhodni, zda má text potøebu více øádkù
+    private bool ShouldWrapText(string text, int sectionWidth)
+    {
+        // Pøibližný výpoèet: znaky vs šíøka
+        // Pøi font-size 24px a text-anchor=middle, asi 4-5 znakù na 100px
+        // Lze pak pro 14px zmenšený font (label-line): cca 8-10 znakù na 100px
+
+        const double charsPerPixelSingleLine = 0.05; // 5 znakù na 100px pro 24px font
+        var estimatedWidth = text.Length / charsPerPixelSingleLine;
+
+        // Pokud se vejde na jeden øádek (s 10px padding na stranì), vykresli na jednom øádku
+        return estimatedWidth > (sectionWidth - 20);
+    }
+
+    // Optimální rozdìlení textu na øádky
+    private string[] SplitTextOptimally(string text, int sectionWidth)
+    {
+        var words = text.Split(' ');
+
+        // Pokud je jen jedno slovo, vrátit jak je
+        if (words.Length == 1)
+            return new[] { text };
+
+        var lines = new List<string>();
+        var currentLine = "";
+
+        foreach (var word in words)
+        {
+            var testLine = string.IsNullOrEmpty(currentLine) ? word : currentLine + " " + word;
+
+            // Odhadni šíøku øádku
+            const double charsPerPixelSingleLine = 0.05;
+            var estimatedWidth = testLine.Length / charsPerPixelSingleLine;
+
+            if (estimatedWidth <= (sectionWidth - 20))
+            {
+                currentLine = testLine;
+            }
+            else
+            {
+                // Øádek by byl pøíliš dlouhý, vložit nový øádek
+                if (!string.IsNullOrEmpty(currentLine))
+                    lines.Add(currentLine);
+                currentLine = word;
+            }
+        }
+
+        // Pøidej poslední øádek
+        if (!string.IsNullOrEmpty(currentLine))
+            lines.Add(currentLine);
+
+        return lines.Count > 0 ? lines.ToArray() : new[] { text };
+    }
+}

@@ -39,7 +39,7 @@
 }
 
 <!-- ✅ Booking Form PartialView -->
-@await Html.PartialAsync("_BookingForm", new { Date = bookingDate })
+@await Html.PartialAsync("_BookingForm", new { Date = bookingDate, Sections = sections })
 
 <!-- ✅ Section Overlays PartialViews -->
 @foreach (var s in sections)

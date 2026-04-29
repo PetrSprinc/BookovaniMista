@@ -1,9 +1,5 @@
 namespace Business.BookovaniMista.Resources
 {
-    /// <summary>
-    /// Konfigurace pozic sekcí na mapì SVG.
-    /// Usnadòuje údržbu a zmìny layoutu bez úpravy kódu.
-    /// </summary>
     public class SekceMapConfig
     {
         public int Id { get; set; }
@@ -17,20 +13,34 @@ namespace Business.BookovaniMista.Resources
         public string Nazev { get; set; } = string.Empty;
     }
 
-    /// <summary>
-    /// Hlavní konfigurace SVG mapy a všech sekcí.
-    /// </summary>
     public static class MapConfiguration
     {
+        // ViewBox parametry
         public const int SvgViewBoxWidth = 1000;
         public const int SvgViewBoxHeight = 500;
         public const string SvgViewBox = "0 0 1000 500";
         public const string SvgNamespace = "http://www.w3.org/2000/svg";
 
-        /// <summary>
-        /// Definice pozic všech sekcí na mapì.
-        /// Zmìna layoutu: pouze updatovat hodnoty zde.
-        /// </summary>
+        // Layout parametry
+        public const int SvgMarginX = 20;
+
+        public const int SvgRowHeight = 200;
+
+        public const int SvgRowPadding = 15;
+
+        public static class SvgRows
+        {
+            public const int Row1Y = 20;
+
+            public const int Row2Y = 20 + SvgRowHeight + SvgRowPadding;
+        }
+
+        public static readonly (string prefix, int yPosition)[] RowConfigurations = new[]
+        {
+            ("SJ", SvgRows.Row1Y),      // Øádek 1: Sekce Jih
+            ("SS", SvgRows.Row2Y)       // Øádek 2: Sekce Sever
+        };
+
         public static readonly SekceMapConfig[] Sekce = new[]
         {
             // Horní øada: 4 sekce (jih)

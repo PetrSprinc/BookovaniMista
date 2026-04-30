@@ -32,19 +32,6 @@ namespace BookovaniMista.Controllers
             }
         }
 
-        public IActionResult Privacy()
-        {
-            try
-            {
-                return View();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading Privacy page");
-                return RedirectToAction(nameof(Error));
-            }
-        }
-
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

@@ -44,7 +44,7 @@
 <!-- ✅ Section Overlays PartialViews -->
 @foreach (var s in sections)
 {
-    @await Html.PartialAsync("_SectionOverlay", new
+    @await Html.PartialAsync("_SeatGrid", new
     {
         SekceDbId = s.Db,
         AnchorId = s.Id,
@@ -52,8 +52,9 @@
         Subtitle = s.Subtitle,
         Total = s.Total,
         Rows = s.Rows,
+        BookedIndices = allReservations[s.Db],
         CurrentUsername = currentUsername,
-        BookedIndices = allReservations[s.Db]
+        ShowOwnerName = false
     })
 }
 

@@ -1,0 +1,73 @@
+@{
+    var sekceDbId = Model.SekceDbId;
+    var anchorId = Model.AnchorId;
+    var title = Model.Title;
+    var subtitle = Model.Subtitle;
+    var total = Model.Total;
+    var rows = Model.Rows;
+    var bookedIndices = (Dictionary<int, string?>)Model.BookedIndices;
+    var currentUsername = Model?.CurrentUsername as string; //Pro Zabookování: rozliší "moje" vs "cizí" rezervace
+    var showOwnerName = Model?.ShowOwnerName ?? false; //Pro Obsazenost: zobrazí jméno rezervujícího pod èíslem
+
+    if (rows <= 0) { rows = 1; }
+    var cols = (int)Math.Ceiling(total / (double)rows);
+}
+
+<!-- Unified Seat Grid PartialView -->
+<div id="@anchorId" class="overlay" aria-hidden="true" data-sekce-db="@sekceDbId" data-section-title="@title">
+    <div class="detail">
+        <a class="close" href="#" aria-label="Zavøít" aria-hidden="false">&times;</a>
+        <h3>@title</h3>
+        <p class="muted">@subtitle</p>
+
+        <div class="seats-grid">
+            <div style="display:grid; grid-template-columns:repeat(@cols, 1fr); gap:.5rem;">
+                @for (int i = 1; i <= total; i++)
+                {
+                    var seatIndex = i;
+                    var isBooked = bookedIndices.TryGetValue(seatIndex, out var bookedByUser) && !string.IsNullOrEmpty(bookedByUser);
+
+                    if (isBooked)
+                    {
+                        var isMine = !string.IsNullOrEmpty(currentUsername) &&
+                                    string.Equals(bookedByUser, currentUsername, StringComparison.OrdinalIgnoreCase);
+                        var cssClass = isMine ? "booked-me" : "booked-other";
+
+                        if (showOwnerName)
+                        {
+                            <!-- Obsazenost: Zobraz jméno pod èíslem -->
+                            <div class="btn seat @cssClass" style="cursor: default; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.25rem;">
+                                <div style="font-size: 0.75rem; font-weight: 600;">@seatIndex</div>
+                                <div style="font-size: 0.65rem; color: #ddd; margin-top: 0; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center;">@bookedByUser</div>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- Zabookování: Jen èíslo + tlaèítko s Bootstrap tooltipem -->
+                            <button type="button" class="btn seat @cssClass" data-seat="@seatIndex" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Zarezervováno: @bookedByUser" style="position: relative;">
+                                @seatIndex
+                            </button>
+                        }
+                    }
+                    else
+                    {
+                        if (showOwnerName)
+                        {
+                            <!-- Obsazenost: Disabled tlaèítko bez akce -->
+                            <button type="button" class="btn seat available" style="cursor: default;" disabled>
+                                @seatIndex
+                            </button>
+                        }
+                        else
+                        {
+                            <!-- Zabookování: Kliknutelné tlaèítko -->
+                            <button type="button" class="btn seat available" data-seat="@seatIndex">
+                                @seatIndex
+                            </button>
+                        }
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

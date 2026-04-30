@@ -139,13 +139,27 @@
     }
 
     /**
-     * Close dialog on ESC key
+     * Close dialog or overlay on ESC key
      */
     document.addEventListener('keydown', function (ev) {
-        if (ev.key === 'Escape' && dialog.getAttribute('aria-hidden') === 'false') {
+        if (ev.key !== 'Escape') return;
+
+        // Priority 1: Close confirmation dialog if open
+        if (dialog && dialog.getAttribute('aria-hidden') === 'false') {
             dialog.setAttribute('aria-hidden', 'true');
             dialog.style.display = 'none';
             currentButton = null;
+            ev.preventDefault();
+            return;
+        }
+
+        // Priority 2: Close overlay (section) if open
+        const openOverlay = document.querySelector('.overlay:target');
+        if (openOverlay) {
+            // Navigate to remove the :target state
+            window.history.back();
+            ev.preventDefault();
+            return;
         }
     });
 
@@ -160,4 +174,33 @@
             }
         });
     }
+
+    //Hover tooltips - Bootstrap
+    function initializeTooltips() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (el) {
+            // Dispose old tooltip if exists to prevent duplicates
+            var existingTooltip = bootstrap.Tooltip.getInstance(el);
+            if (existingTooltip) {
+                existingTooltip.dispose();
+            }
+            return new bootstrap.Tooltip(el);
+        });
+    }
+
+    // Initialize on load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeTooltips);
+    } else {
+        initializeTooltips();
+    }
+
+    // Reinitialize when overlay opens (dynamically rendered buttons)
+    document.addEventListener('click', function(ev) {
+        const target = ev.target;
+        // When any overlay becomes visible
+        if (target.closest('.overlay') || target.closest('[href^="#"]')) {
+            setTimeout(initializeTooltips, 50);
+        }
+    });
 })();

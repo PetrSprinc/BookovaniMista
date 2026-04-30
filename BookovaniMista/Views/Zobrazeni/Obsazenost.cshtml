@@ -1,6 +1,62 @@
-﻿@{
+﻿@using Business.BookovaniMista.Interfaces
+@inject IMapaBusiness Mapa
+@{
     ViewData["Title"] = "Obsazenost místnosti";
 }
+
 <h1>@ViewData["Title"]</h1>
 
-<p class="lead">Zobrazuje se aktuální obsazenost místonosti: </p>
+@{
+    // Parse date from query string
+    var dateString = Context.Request.Query["bookingDate"].FirstOrDefault();
+    dateString ??= DateTime.Today.ToString("yyyy-MM-dd");
+    DateTime bookingDate = DateTime.TryParse(dateString, out var parsedDate) ? parsedDate.Date : DateTime.Today;
+
+    // Section definitions
+    var sections = new[]
+    {
+        new { Id = "SJ1", Db = 1, Title = "Sekce jih 1", Subtitle = "Severní levá sekce — vizualizace míst", Total = 15, Rows = 3 },
+        new { Id = "SJ2", Db = 2, Title = "Sekce jih 2", Subtitle = "Severní střed-levo — vizualizace míst", Total = 18, Rows = 3 },
+        new { Id = "SJ3", Db = 3, Title = "Sekce jih 3", Subtitle = "Severní střed-pravo — vizualizace míst", Total = 18, Rows = 3 },
+        new { Id = "SJ4", Db = 4, Title = "Sekce jih 4", Subtitle = "Severní pravá sekce — vizualizace míst", Total = 6, Rows = 3 },
+        new { Id = "SS1", Db = 5, Title = "Sekce sever 1", Subtitle = "Jižní 1/5 — vizualizace míst", Total = 12, Rows = 3 },
+        new { Id = "SS2", Db = 6, Title = "Sekce sever 2", Subtitle = "Jižní 2/5 — vizualizace míst", Total = 12, Rows = 3 },
+        new { Id = "SS3", Db = 7, Title = "Sekce sever 3", Subtitle = "Jižní 3/5 — vizualizace míst", Total = 12, Rows = 3 },
+        new { Id = "SS4", Db = 8, Title = "Sekce sever 4", Subtitle = "Jižní 4/5 — vizualizace míst", Total = 18, Rows = 3 },
+        new { Id = "SS5", Db = 9, Title = "Sekce sever 5", Subtitle = "Jižní 5/5 — vizualizace míst", Total = 6, Rows = 3 }
+    };
+
+    var sekceDbIds = sections.Select(s => s.Db).ToArray();
+    var allReservations = await Mapa.GetAllReservationsForDateAsync(bookingDate, sekceDbIds);
+}
+
+<!-- ✅ Section Map PartialView (Reuse) -->
+@await Html.PartialAsync("_SectionMap", new
+{ 
+    Date = bookingDate, 
+    Sections = sections,
+    IntroText = "Zobrazte si obsazenost místnosti pro zvolený den.",
+    MapTitle = "Vyberte den",
+    MapDescription = "Zobrazte obsazenost pro konkrétní den.",
+    ReadOnly = true,
+    OnChangeScript = "document.location = '?bookingDate=' + this.value"
+})
+
+<!-- ✅ Seat Grid PartialViews -->
+@foreach (var s in sections)
+{
+    var bookedSeats = allReservations.ContainsKey(s.Db) ? allReservations[s.Db] : new Dictionary<int, string?>();
+
+    @await Html.PartialAsync("_SeatGrid", new
+    {
+        SekceDbId = s.Db,
+        AnchorId = s.Id,
+        Title = s.Title,
+        Subtitle = s.Subtitle,
+        Total = s.Total,
+        Rows = s.Rows,
+        BookedIndices = bookedSeats,
+        CurrentUsername = (string?)null,
+        ShowOwnerName = true
+    })
+}

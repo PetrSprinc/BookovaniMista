@@ -10,8 +10,8 @@ using Business.BookovaniMista.Resources;
 namespace Business.BookovaniMista
 {
     /// <summary>
-    /// Business logic for map rendering and booking management
-    /// Uses String.Join + LINQ instead of StringBuilder for cleaner, more readable HTML generation
+    /// Logika mapy - řídí vykreslování interaktivní mapy a správu rezervací.
+    /// Využívá String.Join + LINQ místo StringBuilder pro čistší a čitelnější HTML generování.
     /// </summary>
     public class MapaBusiness : IMapaBusiness
     {
@@ -25,8 +25,8 @@ namespace Business.BookovaniMista
         }
 
         /// <summary>
-        /// Render booking form with date picker and interactive SVG map
-        /// Uses String.Join + String Interpolation instead of StringBuilder
+        /// Vykresluje formulář pro rezervaci s výběrem data a interaktivní SVG mapou.
+        /// Využívá String.Join + String Interpolation místo StringBuilder.
         /// </summary>
         public Task<IHtmlContent> RenderBookingForm(DateTime date)
         {
@@ -34,7 +34,7 @@ namespace Business.BookovaniMista
             const int maxDaysInFuture = 365;
             var maxDate = date.AddDays(maxDaysInFuture).ToString("yyyy-MM-dd");
 
-            // Generate section elements using String.Join + LINQ
+            // Generování prvků sekcí pomocí String.Join + LINQ
             var sectionRects = string.Join("\n", 
                 MapConfiguration.Sekce.Select(s => $@"
         <a href=""#{WebUtility.HtmlEncode(s.AnchorId)}"" class=""section-link"" data-sekce-db=""{s.Id}"">
@@ -46,7 +46,7 @@ namespace Business.BookovaniMista
                 MapConfiguration.Sekce.Select(s => $@"
         <text x=""{s.LabelX}"" y=""{s.LabelY}"" text-anchor=""middle"" class=""label"">{WebUtility.HtmlEncode(s.Nazev)}</text>"));
 
-            // Build complete HTML using String Interpolation
+            // Sestavení kompletního HTML pomocí String Interpolation
             var html = $@"
 <div class=""card mb-4"">
     <div class=""card-body"">
@@ -77,8 +77,8 @@ namespace Business.BookovaniMista
         }
 
         /// <summary>
-        /// Render section overlay with all seats
-        /// Uses String.Join + LINQ for seat button generation
+        /// Vykresluje overlay sekce se všemi místy.
+        /// Využívá String.Join + LINQ pro generování tlačítek míst.
         /// </summary>
         public IHtmlContent RenderSectionOverlay(
             int sekceDbId, string anchorId, string title, string subtitle,

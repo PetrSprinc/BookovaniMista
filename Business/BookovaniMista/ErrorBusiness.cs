@@ -18,6 +18,9 @@ namespace Business.BookovaniMista
                 BookingErrorType.DatabaseError => 500,
                 BookingErrorType.ValidationFailed => 400,
                 BookingErrorType.UnexpectedError => 500,
+                BookingErrorType.AuthenticationFailed => 401,
+                BookingErrorType.ModelValidationFailed => 400,
+                BookingErrorType.ConcurrentBooking => 409,
                 _ => 500
             };
         }
@@ -34,6 +37,9 @@ namespace Business.BookovaniMista
                 BookingErrorType.SeatAlreadyBooked => BookingErrorMessages.SeatAlreadyBooked,
                 BookingErrorType.DatabaseError => BookingErrorMessages.DatabaseError,
                 BookingErrorType.UnexpectedError => BookingErrorMessages.UnexpectedError,
+                BookingErrorType.AuthenticationFailed => BookingErrorMessages.AuthenticationFailed,
+                BookingErrorType.ModelValidationFailed => BookingErrorMessages.ModelValidationFailed,
+                BookingErrorType.ConcurrentBooking => BookingErrorMessages.ConcurrentBooking,
                 _ => BookingErrorMessages.UnexpectedError
             };
         }

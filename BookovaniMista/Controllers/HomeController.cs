@@ -1,35 +1,18 @@
 using System.Diagnostics;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using BookovaniMista.Models;
 using Microsoft.AspNetCore.Mvc;
-using Entities.BookovaniMista;
-using Microsoft.EntityFrameworkCore;
+using BookovaniMista.Models;
 
 namespace BookovaniMista.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-        private readonly BookovaniMistaDbContext _db;
-
-        public HomeController(ILogger<HomeController> logger, BookovaniMistaDbContext db)
+        public HomeController()
         {
-            _logger = logger;
-            _db = db;
         }
 
         public IActionResult Index()
         {
-            try
-            {
-                return View();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading Index page");
-                return RedirectToAction(nameof(Error));
-            }
+            return View();
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

@@ -8,12 +8,20 @@ using Business.BookovaniMista.ViewModels;
 
 namespace Business.BookovaniMista
 {
+    /// <summary>
+    /// Běžné operace - obsahuje metody pro identifikaci uživatele a statistiky obsazenosti.
+    /// Zajišťuje hledání zaměstnance podle různých kritérií a generuje reporty o využití míst.
+    /// </summary>
     public class CommonBusiness : ICommonBusiness
     {
         private readonly BookovaniMistaDbContext _db;
 
         public CommonBusiness(BookovaniMistaDbContext db) => _db = db;
 
+        /// <summary>
+        /// Načítá aktuálního zaměstnance na základě uživatelských claims.
+        /// Hledá postupně: email, UPN, jméno z identity.
+        /// </summary>
         public async Task<Zamestnanec?> GetCurrentZamestnanecAsync(ClaimsPrincipal user)
         {
             if (user == null) return null;
@@ -56,13 +64,17 @@ namespace Business.BookovaniMista
             if (string.IsNullOrEmpty(input))
                 return input;
 
-            // Escape backslash first to avoid double-escaping
+            // Escape backslash nejprve, aby nedošlo k dvojitému escapování
             return input
                 .Replace("\\", "\\\\", StringComparison.Ordinal)
                 .Replace("%", "\\%", StringComparison.Ordinal)
                 .Replace("_", "\\_", StringComparison.Ordinal);
         }
 
+        /// <summary>
+        /// Získává statistiku vytížení míst za období.
+        /// Počítá počet dnů, kdy bylo každé místo objednáno.
+        /// </summary>
         public async Task<VytizenostResult> GetVytizenostAsync(DateTime? odDatum, DateTime? doDatum)
         {
             var today = DateTime.Today;

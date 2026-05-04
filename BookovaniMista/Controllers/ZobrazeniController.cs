@@ -55,15 +55,7 @@ namespace BookovaniMista.Controllers
 
         public IActionResult Obsazenost()
         {
-            try
-            {
-                return View();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading Obsazenost");
-                return RedirectToAction("Error", "Home");
-            }
+            return View();
         }
 
         // Vytíženost: volitelnì od/do (GET), výchozí od zaèátku mìsíce do jeho konce

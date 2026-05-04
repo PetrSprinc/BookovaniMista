@@ -32,5 +32,14 @@ namespace Business.BookovaniMista.Resources
         // Generic Errors
         public const string UnexpectedError = "Nastala neoèekávaná chyba. Prosím, zkuste znovu.";
         public const string OperationCancelled = "Operace byla zrušena.";
+
+        // Authentication Errors
+        public const string AuthenticationFailed = "Uživatel není pøihlášen. Prosím, pøihlaste se.";
+
+        // Model Validation Errors
+        public const string ModelValidationFailed = "Odeslaná data nejsou platná.";
+
+        // Concurrent Booking Errors
+        public const string ConcurrentBooking = "Místo bylo právì zarezervováno jiným uživatelem. Prosím, obnovte a zkuste znovu.";
     }
 }

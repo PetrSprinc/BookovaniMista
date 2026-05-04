@@ -33,6 +33,15 @@ namespace Entities.BookovaniMista.Models
         ValidationFailed = 8,
 
         /// <summary>Unexpected error</summary>
-        UnexpectedError = 9
+        UnexpectedError = 9,
+
+        /// <summary>User authentication failed</summary>
+        AuthenticationFailed = 10,
+
+        /// <summary>Model/DTO validation failed</summary>
+        ModelValidationFailed = 11,
+
+        /// <summary>Concurrent booking detected (race condition)</summary>
+        ConcurrentBooking = 12
     }
 }

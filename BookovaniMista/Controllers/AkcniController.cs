@@ -1,29 +1,26 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Entities.BookovaniMista;
 using Entities.BookovaniMista.Models;
 using Business.BookovaniMista.Interfaces;
 using Business.BookovaniMista;
+using Business.BookovaniMista.Resources;
 
 namespace BookovaniMista.Controllers
 {
-    [Route("Akcni")]
-    public partial class AkcniController : Controller
+    [Route("[controller]")]
+    public class AkcniController : Controller
     {
         private readonly ILogger<AkcniController> _logger;
-        //private readonly BookovaniMistaDbContext _db;
         private readonly IRezervaceBusiness _rezervaceBusiness;
 
-        //public AkcniController(ILogger<AkcniController> logger, BookovaniMistaDbContext db, IRezervaceBusiness rezervaceBusiness)
         public AkcniController(ILogger<AkcniController> logger, IRezervaceBusiness rezervaceBusiness)
         {
             _logger = logger;
-            //_db = db;
             _rezervaceBusiness = rezervaceBusiness;
         }
 
-        // GET /Akcni/Zabookovat
+        // GET /akcni/zabookovat
         public IActionResult Zabookovat()
         {
             try
@@ -47,11 +44,12 @@ namespace BookovaniMista.Controllers
         {
             try
             {
-                // Authentication check
+                // Ovìøení autentizace
                 if (!User.Identity?.IsAuthenticated ?? true)
                 {
                     _logger.LogWarning("Booking attempt by unauthenticated user");
-                    return Unauthorized(new { success = false, error = "User not authenticated" });
+                    var message = ErrorBusiness.GetLocalizedMessage(BookingErrorType.AuthenticationFailed);
+                    return Unauthorized(new { success = false, error = message });
                 }
 
                 var userIdentifier = User.FindFirst(ClaimTypes.Email)?.Value 
@@ -61,17 +59,19 @@ namespace BookovaniMista.Controllers
                 if (string.IsNullOrEmpty(userIdentifier))
                 {
                     _logger.LogWarning("Booking attempt with empty user identifier");
-                    return Unauthorized(new { success = false, error = "User not authenticated" });
+                    var message = ErrorBusiness.GetLocalizedMessage(BookingErrorType.AuthenticationFailed);
+                    return Unauthorized(new { success = false, error = message });
                 }
 
-                // Model validation
+                // Validace modelu
                 if (!ModelState.IsValid)
                 {
                     var errors = ModelState.Values
                         .SelectMany(v => v.Errors)
                         .Select(e => e.ErrorMessage);
                     _logger.LogWarning("Booking validation failed: {Errors}", string.Join("; ", errors));
-                    return BadRequest(new { success = false, error = "Invalid booking data" });
+                    var message = ErrorBusiness.GetLocalizedMessage(BookingErrorType.ModelValidationFailed);
+                    return BadRequest(new { success = false, error = message });
                 }
 
                 // Business logic
@@ -105,23 +105,27 @@ namespace BookovaniMista.Controllers
                 // Race condition: two concurrent bookings
                 _logger.LogWarning(ex, "Race condition detected - concurrent booking on same seat. User: {User}", 
                     User.FindFirst(ClaimTypes.Email)?.Value ?? User.Identity?.Name);
-                return Conflict(new { success = false, error = "Seat was just booked by another user. Please refresh and try again." });
+                var message = ErrorBusiness.GetLocalizedMessage(BookingErrorType.ConcurrentBooking);
+                return Conflict(new { success = false, error = message });
             }
             catch (DbUpdateException ex)
             {
                 // Other database errors
                 _logger.LogError(ex, "Database error during booking");
-                return StatusCode(500, new { success = false, error = "Database error occurred. Please try again." });
+                var message = ErrorBusiness.GetLocalizedMessage(BookingErrorType.DatabaseError);
+                return StatusCode(500, new { success = false, error = message });
             }
             catch (OperationCanceledException)
             {
                 _logger.LogWarning("Booking request cancelled");
-                return StatusCode(499, new { success = false, error = "Request was cancelled" });
+                var message = BookingErrorMessages.OperationCancelled;
+                return StatusCode(499, new { success = false, error = message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error during booking. Exception type: {ExceptionType}", ex.GetType().Name);
-                return StatusCode(500, new { success = false, error = "An unexpected error occurred. Please try again." });
+                var message = ErrorBusiness.GetLocalizedMessage(BookingErrorType.UnexpectedError);
+                return StatusCode(500, new { success = false, error = message });
             }
         }
     }

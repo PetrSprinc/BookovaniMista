@@ -9,7 +9,7 @@ namespace Entities.BookovaniMista
         {
             if (!await db.Sekce.AnyAsync())
             {
-                var defaultSekce = new[] //duplicitní s Zabookovat
+                var defaultSekce = new[]
                 {
                     new Sekce { Oznaceni = "SJ1", Nazev = "Sekce jih 1", Kapacita = 15 },
                     new Sekce { Oznaceni = "SJ2", Nazev = "Sekce jih 2", Kapacita = 18 },

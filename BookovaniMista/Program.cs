@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.Negotiate;
+ï»¿using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.EntityFrameworkCore;
 using Entities.BookovaniMista;
 using Business.BookovaniMista.Interfaces;
@@ -49,7 +49,7 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-// Spuštìní seedování v rámci scope pøed spuštìním aplikace
+// SpuÅ¡tÄ›nÃ­ seedovÃ¡nÃ­ v rÃ¡mci scope pÅ™ed spuÅ¡tÄ›nÃ­m aplikace
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<BookovaniMistaDbContext>();

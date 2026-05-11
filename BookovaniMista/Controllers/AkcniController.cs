@@ -27,7 +27,7 @@ namespace BookovaniMista.Controllers
             {
                 string? currentUsername = User.FindFirst(ClaimTypes.Email)?.Value
                                           ?? User.Identity?.Name;
-                ViewData["CurrentUsername"] = currentUsername;
+                ViewData[Constants.ViewDataKeys.CurrentUsername] = currentUsername;
                 return View();
             }
             catch (Exception ex)

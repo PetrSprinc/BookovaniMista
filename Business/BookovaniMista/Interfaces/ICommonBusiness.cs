@@ -8,5 +8,6 @@ namespace Business.BookovaniMista.Interfaces
     {
         Task<Zamestnanec?> GetCurrentZamestnanecAsync(ClaimsPrincipal user);
         Task<VytizenostResult> GetVytizenostAsync(DateTime? odDatum, DateTime? doDatum);
+        SectionInfo[] GetSectionDefinitions();
     }
 }

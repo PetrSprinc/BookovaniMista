@@ -127,12 +127,12 @@
         // Vymezená šíøka pro sekce (bez okrajù a paddingu)
         const int marginLeft = 20;
         const int marginRight = 20;
-        const int sectionPadding = 3;  // Malá mezera mezi sekcemi
+        const int sectionPadding = 3;
 
         var totalPadding = (sections.Length - 1) * sectionPadding;
         var availableWidth = totalWidth - marginLeft - marginRight - totalPadding;
 
-        var currentX = startX + marginLeft;
+        var currentX = startX;
 
         foreach (var (id, seats) in sections)
         {

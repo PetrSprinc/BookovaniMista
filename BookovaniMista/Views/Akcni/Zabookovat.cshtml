@@ -1,52 +1,37 @@
 ﻿@using Business.BookovaniMista
 @using Business.BookovaniMista.Interfaces
+@using Business.BookovaniMista.Resources
 @inject IMapaBusiness Mapa
+@inject ICommonBusiness CommonBusinessService
 @{
-    ViewData["Title"] = "Zabookovat místo";
+    ViewData[Constants.ViewDataKeys.Title] = "Zabookovat místo";
 
     // Get current username
-    string? currentUsername = ViewData["CurrentUsername"] as string
+    string? currentUsername = ViewData[Constants.ViewDataKeys.CurrentUsername] as string
                               ?? User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
                               ?? User.Identity?.Name;
-}
 
-<h1>@ViewData["Title"]</h1>
-
-@{
-    // Parse booking date from query string or form
-    var bookingDateString = Context.Request.Query["bookingDate"].FirstOrDefault();
+    var bookingDateString = Context.Request.Query[Constants.RequestParameters.BookingDate].FirstOrDefault();
     if (string.IsNullOrEmpty(bookingDateString) && Context.Request.HasFormContentType)
-        bookingDateString = Context.Request.Form["bookingDate"].FirstOrDefault();
-    bookingDateString ??= DateTime.Today.ToString("yyyy-MM-dd");
-    DateTime bookingDate = DateTime.TryParse(bookingDateString, out var parsedDate) ? parsedDate.Date : DateTime.Today;
-
-    // Section definitions
-    var sections = new[]
     {
-        new { Id = "SJ1", Db = 1, Title = "Sekce jih 1", Subtitle = "Severní levá sekce — vizualizace míst", Total = 15, Rows = 3 },
-        new { Id = "SJ2", Db = 2, Title = "Sekce jih 2", Subtitle = "Severní střed-levo — vizualizace míst", Total = 18, Rows = 3 },
-        new { Id = "SJ3", Db = 3, Title = "Sekce jih 3", Subtitle = "Severní střed-pravo — vizualizace míst", Total = 18, Rows = 3 },
-        new { Id = "SJ4", Db = 4, Title = "Sekce jih 4", Subtitle = "Severní pravá sekce — vizualizace míst", Total = 6, Rows = 3 },
-        new { Id = "SS1", Db = 5, Title = "Sekce sever 1", Subtitle = "Jižní 1/5 — vizualizace míst", Total = 12, Rows = 3 },
-        new { Id = "SS2", Db = 6, Title = "Sekce sever 2", Subtitle = "Jižní 2/5 — vizualizace míst", Total = 12, Rows = 3 },
-        new { Id = "SS3", Db = 7, Title = "Sekce sever 3", Subtitle = "Jižní 3/5 — vizualizace míst", Total = 12, Rows = 3 },
-        new { Id = "SS4", Db = 8, Title = "Sekce sever 4", Subtitle = "Jižní 4/5 — vizualizace míst", Total = 18, Rows = 3 },
-        new { Id = "SS5", Db = 9, Title = "Sekce sever 5", Subtitle = "Jižní 5/5 — vizualizace míst", Total = 6, Rows = 3 }
-    };
+        bookingDateString = Context.Request.Form[Constants.RequestParameters.BookingDate].FirstOrDefault();
+    }
+    DateTime bookingDate = CommonBusiness.ParseBookingDate(bookingDateString);
 
+    var sections = CommonBusinessService.GetSectionDefinitions();
     var sekceDbIds = sections.Select(s => s.Db).ToArray();
     var allReservations = await Mapa.GetAllReservationsForDateAsync(bookingDate, sekceDbIds);
 }
 
 <!-- ✅ Booking Container with API Endpoint -->
-<div id="booking-container" data-api-endpoint="/Akcni/Rezervovat">
+<div id="@Constants.HtmlIds.BookingContainer" data-api-endpoint="@Constants.ApiEndpoints.Rezervovat">
     <!-- ✅ Booking Form PartialView -->
-    @await Html.PartialAsync("_BookingForm", new { Date = bookingDate, Sections = sections })
+    @await Html.PartialAsync(Constants.PartialViewNames.BookingForm, new { Date = bookingDate, Sections = sections })
 
     <!-- ✅ Section Overlays PartialViews -->
     @foreach (var s in sections)
     {
-        @await Html.PartialAsync("_SeatGrid", new
+        @await Html.PartialAsync(Constants.PartialViewNames.SeatGrid, new
         {
             SekceDbId = s.Db,
             AnchorId = s.Id,
@@ -61,7 +46,7 @@
     }
 
     <!-- ✅ Confirmation Dialog PartialView -->
-    @await Html.PartialAsync("_ConfirmDialog")
+    @await Html.PartialAsync(Constants.PartialViewNames.ConfirmDialog)
 
     <!-- ✅ CSRF Token Protection -->
     @Html.AntiForgeryToken()

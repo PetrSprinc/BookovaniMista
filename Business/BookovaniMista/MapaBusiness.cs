@@ -166,9 +166,9 @@ namespace Business.BookovaniMista
         {
             var d = date.Date;
 
-            var rezervace = await (from r in _db.Rezervace
-                                   join m in _db.Mista on r.MistoId equals m.Id
-                                   join z in _db.Zamestnanci on r.ZamestnanecId equals z.Id
+            var rezervace = await (from r in _db.Rezervace.AsNoTracking()
+                                   join m in _db.Mista.AsNoTracking() on r.MistoId equals m.Id
+                                   join z in _db.Zamestnanci.AsNoTracking() on r.ZamestnanecId equals z.Id
                                    where r.DatumRezervace >= d &&
                                          r.DatumRezervace < d.AddDays(1) &&
                                          sekceDbIds.Contains(m.SekceId)
